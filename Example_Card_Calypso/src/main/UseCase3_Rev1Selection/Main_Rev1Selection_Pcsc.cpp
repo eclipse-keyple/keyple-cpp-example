@@ -26,14 +26,16 @@
 #include "LoggerFactory.h"
 #include "StringUtils.h"
 
-/* Keyple Plugin Stub */
-#include "StubPlugin.h"
-#include "StubPluginFactoryBuilder.h"
-#include "StubReader.h"
+/* Keyple Plugin Pcsc */
+#include "PcscPlugin.h"
+#include "PcscPluginFactory.h"
+#include "PcscPluginFactoryBuilder.h"
+#include "PcscReader.h"
+#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Cpp Example */
 #include "CalypsoConstants.h"
-#include "StubSmartCardFactory.h"
+#include "ConfigurationUtil.h"
 
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
@@ -41,37 +43,40 @@ using namespace keyple::core::util;
 using namespace keyple::core::util::cpp;
 using namespace keyple::core::util::cpp::exception;
 using namespace keyple::core::util::protocol;
-using namespace keyple::plugin::stub;
+using namespace keyple::plugin::pcsc;
 
 /**
  *
  *
- * <h1>Use Case Calypso 1 – Explicit Selection Aid (Stub)</h1>
+ * <h1>Use Case ‘Calypso 3 – Selection a Calypso card Revision 1 (BPRIME protocol) (PC/SC)</h1>
  *
- * <p>We demonstrate here the direct selection of a Calypso card inserted in a reader. No
- * observation of the reader is implemented in this example, so the card must be present in the
- * reader before the program is launched.
+ * <p>We demonstrate here the direct selection of a Calypso card Revision 1 (Innovatron / B Prime
+ * protocol) inserted in a reader. No observation of the reader is implemented in this example, so
+ * the card must be present in the reader before the program is launched.
+ *
+ * <p>No AID is used here, the reading of the card data is done without any prior card selection
+ * command as defined in the ISO standard.
+ *
+ * <p>The card selection (in the Keyple sensein the Keyple sense, i.e. retained to continue
+ * processing) is based on the protocol.
  *
  * <h2>Scenario:</h2>
  *
  * <ul>
- *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
- *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
- *       an AID-based application selection scenario, including reading a file record.
- *   <li>Output the collected data (FCI, ATR and file record content).
+ *   <li>Check if a ISO B Prime (Innovatron protocol) card is in the reader.
+ *   <li>Send 2 additional APDUs to the card (one following the selection step, one after the
+ *       selection, within a card transaction [without security here]).
  * </ul>
  *
  * All results are logged with slf4j.
  *
- * <p>Any unexpected behavior will result in a runtime exceptions.
+ * <p>Any unexpected behavior will result in runtime exceptions.
  *
  * @since 2.0.0
  */
-class Main_ExplicitSelectionAid_Stub {};
-static std::unique_ptr<Logger> logger =
-    LoggerFactory::getLogger(typeid(Main_ExplicitSelectionAid_Stub));
-
-static const std::string CARD_READER_NAME = "Stub card reader";
+class Main_Rev1Selection_Pcsc {};
+static const std::unique_ptr<Logger> logger =
+    LoggerFactory::getLogger(typeid(Main_Rev1Selection_Pcsc));
 
 int main()
 {
@@ -79,37 +84,36 @@ int main()
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
     /*
-     * Register the StubPlugin with the SmartCardService, plug a Calypso card stub
-     * get the corresponding generic plugin in return.
+     * Register the PcscPlugin with the SmartCardService, get the corresponding generic plugin in
+     * return.
      */
-    std::shared_ptr<StubPluginFactory> pluginFactory =
-        StubPluginFactoryBuilder::builder()
-            ->withStubReader(CARD_READER_NAME, true, StubSmartCardFactory::getStubCard())
-            .build();
-    std::shared_ptr<Plugin> plugin = smartCardService->registerPlugin(pluginFactory);
+    std::shared_ptr<Plugin> plugin =
+        smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
-    std::shared_ptr<Reader> cardReader = plugin->getReader(CARD_READER_NAME);
+    std::shared_ptr<Reader> cardReader =
+        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
 
     std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
-        ->activateProtocol(ContactlessCardCommonProtocol::ISO_14443_4.getName(),
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
                            ContactlessCardCommonProtocol::ISO_14443_4.getName());
 
     /* Get the Calypso card extension service */
-    auto cardExtension = CalypsoExtensionService::getInstance();
+    std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
 
-    /* Verify that the extension's API level is consistent with the current service */
+     /* Verify that the extension's API level is consistent with the current service */
     smartCardService->checkCardExtension(cardExtension);
 
     logger->info("=============== " \
-                 "UseCase Calypso #1: AID based explicit selection " \
+                 "UseCase Calypso #3: selection of a rev1 card " \
                  "==================\n");
+    logger->info("= Card Reader  NAME = %\n", cardReader->getName());
 
     /* Check if a card is present in the reader */
     if (!cardReader->isCardPresent()) {
         throw IllegalStateException("No card is present in the reader.");
     }
 
-    logger->info("= #### Select application with AID = '%'\n", CalypsoConstants::AID);
+    logger->info("= #### Select the card by its INNOVATRON protocol (no AID)\n");
 
     /* Get the core card selection manager */
     std::shared_ptr<CardSelectionManager> cardSelectionManager =
@@ -118,15 +122,14 @@ int main()
     /*
      * Create a card selection using the Calypso card extension.
      * Prepare the selection by adding the created Calypso card selection to the card selection
-     * scenario.
+     * scenario. No AID is defined, only the card protocol will be used to define the selection
+     * case.
      */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
-    cardSelection->filterByDfName(CalypsoConstants::AID)
-                  .acceptInvalidatedCard()
-                  .prepareReadRecord(
-                      CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
-                      CalypsoConstants::RECORD_NUMBER_1);
-    cardSelectionManager->prepareSelection(cardSelection);
+    std::shared_ptr<CalypsoCardSelection> selection = cardExtension->createCardSelection();
+    selection->acceptInvalidatedCard()
+              .filterByCardProtocol(ContactlessCardCommonProtocol::INNOVATRON_B_PRIME_CARD.getName())
+              .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
+                                 CalypsoConstants::RECORD_NUMBER_1);
 
     /* Actual card communication: run the selection scenario */
     const std::shared_ptr<CardSelectionResult> selectionResult =
@@ -134,23 +137,31 @@ int main()
 
     /* Check the selection result */
     if (selectionResult->getActiveSmartCard() == nullptr) {
-        throw IllegalStateException("The selection of the application '" +
-                                    CalypsoConstants::AID +
-                                    "' failed.");
+        throw IllegalStateException("The selection of the B Prime card failed.");
     }
 
     /* Get the SmartCard resulting of the selection */
-    const std::shared_ptr<SmartCard> card = selectionResult->getActiveSmartCard();
-    auto calypsoCard = std::dynamic_pointer_cast<CalypsoCard>(card);
+    const auto calypsoCard =
+        std::dynamic_pointer_cast<CalypsoCard>(selectionResult->getActiveSmartCard());
 
     logger->info("= SmartCard = %\n", calypsoCard);
 
     logger->info("Calypso Serial Number = %\n",
-                 ByteArrayUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+                     ByteArrayUtil::toHex(calypsoCard->getApplicationSerialNumber()));
 
-    logger->info("File SFI %h, rec 1: FILE_CONTENT = %\n",
+    /* Performs file reads using the card transaction manager in non-secure mode */
+    std::shared_ptr<CardTransactionManager> extension =
+        cardExtension->createCardTransactionWithoutSecurity(cardReader, calypsoCard);
+    extension->prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG, 1)
+              .prepareReleaseCardChannel()
+              .processCardCommands();
+
+    logger->info("File %h, rec 1: FILE_CONTENT = %\n",
                  StringUtils::format("%02X", CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER),
                  calypsoCard->getFileBySfi(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER));
+    logger->info("File %h, rec 1: FILE_CONTENT = %\n",
+                 StringUtils::format("%02X", CalypsoConstants::SFI_EVENT_LOG),
+                 calypsoCard->getFileBySfi(CalypsoConstants::SFI_EVENT_LOG));
 
     logger->info("= #### End of the Calypso card processing\n");
 

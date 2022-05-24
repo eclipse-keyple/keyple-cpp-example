@@ -65,10 +65,9 @@ std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubSam =
         /* Get challenge */
         .withSimulatedCommand("8084000004", "001122339000")
         /* Digest init */
-        .withSimulatedCommand(
-            "808A00FF2730790308D1810030791D00112233445566778899AABBCCDDEEFF0011223344" \
-            "5566778899AABBCC",
-            "9000")
+        .withSimulatedCommand("808A00FF2730790308D1810030791D00112233445566778899AABBCCDDEEFF0011" \
+                              "2233445566778899AABBCC",
+                              "9000")
         /* Digest close */
         .withSimulatedCommand("808E000004", "123456789000")
         /* Digest authenticate */

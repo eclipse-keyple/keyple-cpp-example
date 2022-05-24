@@ -27,7 +27,6 @@
 #include "ContactlessCardCommonProtocol.h"
 #include "Exception.h"
 #include "IllegalStateException.h"
-#include "StringUtils.h"
 
 /* Keyple Plugin Pcsc */
 #include "PcscReader.h"
@@ -102,10 +101,9 @@ std::shared_ptr<Reader> ConfigurationUtil::getCardReader(std::shared_ptr<Plugin>
         }
     }
 
-    throw IllegalStateException(
-              StringUtils::format("Reader '%s' not found in plugin '%s'",
-                                  readerNameRegex,
-                                  plugin->getName()));
+    std::stringstream ss;
+    ss << "Reader '" << readerNameRegex << "' not found in plugin '" << plugin->getName() << "'";
+    throw IllegalStateException(ss.str());
 }
 
 void ConfigurationUtil::setupCardResourceService(std::shared_ptr<Plugin> plugin,
@@ -143,12 +141,14 @@ void ConfigurationUtil::setupCardResourceService(std::shared_ptr<Plugin> plugin,
         cardResourceService->getCardResource(samProfileName);
 
     if (cardResource == nullptr) {
-        throw IllegalStateException(
-                  StringUtils::format("Unable to retrieve a SAM card resource for profile '%s' " \
-                                      "from reader '%s' in plugin '%s'",
-                                      samProfileName,
-                                      readerNameRegex,
-                                      plugin->getName()));
+        std::stringstream ss;
+        ss << "Unable to retrieve a SAM card resource for profile '"
+           << samProfileName
+           << "' from reader '"
+           << readerNameRegex
+           << "' in plugin '"
+           << plugin->getName() << "'";
+        throw IllegalStateException(ss.str());
     }
 
     /* Release the resource */

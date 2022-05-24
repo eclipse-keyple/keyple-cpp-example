@@ -66,7 +66,7 @@ private:
      * Reader configurator used by the card resource service to setup the SAM reader with the required
      * settings.
      */
-    class ReaderConfigurator : public ReaderConfiguratorSpi {
+    class ReaderConfigurator final : public ReaderConfiguratorSpi {
     public:
         friend class ConfigurationUtil;
 
