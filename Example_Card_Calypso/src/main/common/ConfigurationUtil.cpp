@@ -66,8 +66,10 @@ void ConfigurationUtil::ReaderConfigurator::setupReader(std::shared_ptr<Reader> 
 
 /* CONFIGURATION UTIL --------------------------------------------------------------------------- */
 
-const std::string ConfigurationUtil::CARD_READER_NAME_REGEX = ".*ASK LoGO.*|.*Contactless.*|.*00 01.*";
-const std::string ConfigurationUtil::SAM_READER_NAME_REGEX = ".*Identive.*|.*HID.*|.*00 00.*";
+const std::string ConfigurationUtil::CARD_READER_NAME_REGEX = 
+    ".*ASK LoGO.*|.*Contactless.*|.*ACR122U.*|.*00 01.*|.*5x21-CL 0.*";
+const std::string ConfigurationUtil::SAM_READER_NAME_REGEX = 
+    ".*Identive.*|.*HID.*|.*00 00.*|.*5x21 0.*";
 const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
     LoggerFactory::getLogger(typeid(ConfigurationUtil));
 
@@ -80,7 +82,8 @@ std::shared_ptr<Reader> ConfigurationUtil::getCardReader(std::shared_ptr<Plugin>
 
     for (const auto& readerName : plugin->getReaderNames()) {
         if (std::regex_match(readerName, nameRegex)) {
-            auto reader = std::dynamic_pointer_cast<ConfigurableReader>(plugin->getReader(readerName));
+            auto reader = std::dynamic_pointer_cast<ConfigurableReader>(
+                              plugin->getReader(readerName));
 
             /* Configure the reader with parameters suitable for contactless operations */
             auto pcscReader =

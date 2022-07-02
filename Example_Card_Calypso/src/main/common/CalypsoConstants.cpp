@@ -14,7 +14,7 @@
 
 const std::string CalypsoConstants::AID = "315449432E49434131";
 
-const int CalypsoConstants::RECORD_SIZE = 29;
+const uint8_t CalypsoConstants::RECORD_SIZE = 29;
 const uint8_t CalypsoConstants::RECORD_NUMBER_1 = 1;
 const uint8_t CalypsoConstants::RECORD_NUMBER_2 = 2;
 const uint8_t CalypsoConstants::RECORD_NUMBER_3 = 3;

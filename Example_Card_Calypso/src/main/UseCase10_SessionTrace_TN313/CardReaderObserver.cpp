@@ -47,7 +47,7 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
     case CardReaderEvent::Type::CARD_MATCHED:
         {
         /* Read the current time used later to compute the transaction time */
-        const long timeStamp = System::currentTimeMillis();
+        const unsigned long long timeStamp = System::currentTimeMillis();
 
         try {
             /* The selection matched, get the resulting CalypsoCard */

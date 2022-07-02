@@ -74,9 +74,9 @@ int main()
         smartCardService->registerPlugin(
             PcscPluginFactoryBuilder::builder()
                 ->useContactlessReaderIdentificationFilter(
-                    ".*ASK LoGO.*|.*HID OMNIKEY 5427 CK.*|.*contactless.*|.*00 01.*")
+                    ".*ASK LoGO.*|.*HID OMNIKEY 5427 CK.*|.*contactless.*|.*00 01.*|.*5x21-CL 0.*")
                 .useContactReaderIdentificationFilter(
-                    ".*Identive.*|.*HID Global OMNIKEY 3x21.*|(?=contact)(?!contactless)|.*00 00.*")
+                    ".*Identive.*|.*HID Global OMNIKEY 3x21.*|(?=contact)(?!contactless)|.*00 00.*|.*5x21 0.*")
                 .build());
 
     /* Get all connected readers */

@@ -38,7 +38,7 @@ public:
 
     /* File structure */
 
-    static const int RECORD_SIZE;
+    static const uint8_t RECORD_SIZE;
     static const uint8_t RECORD_NUMBER_1;
     static const uint8_t RECORD_NUMBER_2;
     static const uint8_t RECORD_NUMBER_3;
