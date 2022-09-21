@@ -68,6 +68,7 @@ INCLUDE_DIRECTORIES(
     ${KEYPLE_UTIL_DIR}/src/main/protocol
 
     ${KEYPLE_STUB_DIR}/src/main
+    ${KEYPLE_STUB_DIR}/src/main/spi
 )
 
 SET(USECASE1 UseCase1_CardResourceService)

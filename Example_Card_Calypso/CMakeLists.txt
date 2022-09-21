@@ -72,6 +72,7 @@ INCLUDE_DIRECTORIES(
     ${KEYPLE_SERVICE_DIR}/src/main/spi
 
     ${KEYPLE_STUB_DIR}/src/main
+    ${KEYPLE_STUB_DIR}/src/main/spi
 
     ${KEYPLE_UTIL_DIR}/src/main
     ${KEYPLE_UTIL_DIR}/src/main/cpp
