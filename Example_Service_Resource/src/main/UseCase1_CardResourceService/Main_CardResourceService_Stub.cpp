@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -11,7 +11,7 @@
  **************************************************************************************************/
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "ContactCardCommonProtocol.h"
 #include "LoggerFactory.h"
 #include "Thread.h"
@@ -285,7 +285,7 @@ int main()
             std::dynamic_pointer_cast<StubReader>(readerA->getExtension(typeid(StubReader)))
                 ->insertCard(
                     StubSmartCard::builder()
-                        ->withPowerOnData(ByteArrayUtil::fromHex(ATR_CARD_A))
+                        ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_A))
                         .withProtocol(ContactCardCommonProtocol::ISO_7816_3_T0.getName())
                         .build());
             break;
@@ -297,7 +297,7 @@ int main()
             std::dynamic_pointer_cast<StubReader>(readerB->getExtension(typeid(StubReader)))
                 ->insertCard(
                     StubSmartCard::builder()
-                        ->withPowerOnData(ByteArrayUtil::fromHex(ATR_CARD_B))
+                        ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_B))
                          .withProtocol(ContactCardCommonProtocol::ISO_7816_3_T0.getName())
                          .build());
             break;

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -19,7 +19,7 @@
 #include "SmartCardServiceProvider.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "ContactCardCommonProtocol.h"
 #include "ContactlessCardCommonProtocol.h"
 #include "IllegalStateException.h"
@@ -159,7 +159,7 @@ int main()
     logger->info("= SmartCard = %\n", calypsoCard);
 
     logger->info("Calypso Serial Number = %\n",
-                 ByteArrayUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+                 HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
 
     /* Create the card transaction manager */
     std::shared_ptr<CardTransactionManager> cardTransaction = nullptr;

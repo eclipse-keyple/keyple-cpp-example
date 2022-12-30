@@ -19,9 +19,9 @@
 #include "SmartCardServiceProvider.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
 #include "ContactCardCommonProtocol.h"
 #include "ContactlessCardCommonProtocol.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 #include "StringUtils.h"
@@ -147,7 +147,7 @@ int main()
     logger->info("= SmartCard = %\n", calypsoCard);
 
     logger->info("Calypso Serial Number = %\n",
-                     ByteArrayUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+                 HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
 
     /* Performs file reads using the card transaction manager in non-secure mode */
     std::shared_ptr<CardTransactionManager> extension =

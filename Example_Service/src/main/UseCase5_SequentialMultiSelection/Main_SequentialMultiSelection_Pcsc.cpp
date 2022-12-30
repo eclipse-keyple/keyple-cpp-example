@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -15,7 +15,7 @@
 #include "GenericExtensionService.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 
@@ -91,7 +91,7 @@ static void doAndAnalyseSelection(std::shared_ptr<Reader> reader,
 
         const std::string& powerOnData = smartCard->getPowerOnData();
         const std::string selectApplicationResponse =
-            ByteArrayUtil::toHex(smartCard->getSelectApplicationResponse());
+            HexUtil::toHex(smartCard->getSelectApplicationResponse());
 
         logger->info("Selection status for case %: \n" \
                      "\t\tpower-on data: %\n" \

@@ -16,7 +16,7 @@
 #include "CalypsoCard.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "StringUtils.h"
 
 /* Keyple Cpp Examples */
@@ -50,7 +50,7 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
                      " card = %\n",
                      calypsoCard);
         mLogger->info("Calypso Serial Number = %\n",
-                     ByteArrayUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+                      HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
         mLogger->info("Data read during the scheduled selection process:\n");
         mLogger->info("File %h, rec 1: FILE_CONTENT = %\n",
                      StringUtils::format("%02X", CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER),

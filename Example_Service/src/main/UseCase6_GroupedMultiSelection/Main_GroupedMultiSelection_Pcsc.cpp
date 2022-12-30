@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -11,7 +11,7 @@
  **************************************************************************************************/
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 
@@ -143,7 +143,7 @@ int main()
         std::shared_ptr<SmartCard> smartCard = entry.second;
         const std::string& powerOnData = smartCard->getPowerOnData();
         const std::string selectApplicationResponse =
-            ByteArrayUtil::toHex(smartCard->getSelectApplicationResponse());
+            HexUtil::toHex(smartCard->getSelectApplicationResponse());
         const std::string selectionIsActive =
             smartCard == cardSelectionsResult->getActiveSmartCard() ? "true" : "false";
 

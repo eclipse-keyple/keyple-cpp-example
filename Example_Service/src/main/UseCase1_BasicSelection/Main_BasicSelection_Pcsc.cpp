@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -14,7 +14,7 @@
 #include "GenericExtensionService.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 
@@ -127,7 +127,7 @@ int main()
     logger->info("= SmartCard = %\n", smartCard);
 
     /* Execute an APDU to get CPLC Data (cf. Global Platform Specification) */
-    const std::vector<uint8_t> cplcApdu = ByteArrayUtil::fromHex("80CA9F7F00");
+    const std::vector<uint8_t> cplcApdu = HexUtil::toByteArray("80CA9F7F00");
 
     const std::vector<std::string> apduResponses =
         cardExtension->createCardTransaction(reader, smartCard)

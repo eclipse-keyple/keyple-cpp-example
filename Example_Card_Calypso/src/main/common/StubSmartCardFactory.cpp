@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -13,9 +13,9 @@
 #include "StubSmartCardFactory.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
 #include "ContactCardCommonProtocol.h"
 #include "ContactlessCardCommonProtocol.h"
+#include "HexUtil.h"
 
 /* Keyple Plugin Stub */
 #include "StubSmartCard.h"
@@ -34,7 +34,7 @@ const std::string StubSmartCardFactory::SAM_PROTOCOL =
 
 std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubCard =
     StubSmartCard::builder()
-        ->withPowerOnData(ByteArrayUtil::fromHex(CARD_POWER_ON_DATA))
+        ->withPowerOnData(HexUtil::toByteArray(CARD_POWER_ON_DATA))
         .withProtocol(CARD_PROTOCOL)
         /* Select application */
         .withSimulatedCommand(
@@ -58,7 +58,7 @@ std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubCard =
 
 std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubSam =
     StubSmartCard::builder()
-        ->withPowerOnData(ByteArrayUtil::fromHex(SAM_POWER_ON_DATA))
+        ->withPowerOnData(HexUtil::toByteArray(SAM_POWER_ON_DATA))
         .withProtocol(SAM_PROTOCOL)
         /* Select diversifier */
         .withSimulatedCommand("801400000800000000AABBCCDD", "9000")

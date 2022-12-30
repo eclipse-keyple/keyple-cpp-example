@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -22,7 +22,7 @@
 #include "CardSelectionManager.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
+#include "HexUtil.h"
 #include "LoggerFactory.h"
 
 using namespace calypsonet::terminal::calypso::transaction;
@@ -89,5 +89,5 @@ private:
      *
      */
     const std::vector<uint8_t> mNewEventRecord =
-        ByteArrayUtil::fromHex("8013C8EC55667788112233445566778811223344556677881122334455");
+        HexUtil::toByteArray("8013C8EC55667788112233445566778811223344556677881122334455");
 };

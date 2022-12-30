@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -19,9 +19,9 @@
 #include "SmartCardServiceProvider.h"
 
 /* Keyple Core Util */
-#include "ByteArrayUtil.h"
 #include "ContactCardCommonProtocol.h"
 #include "ContactlessCardCommonProtocol.h"
+#include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 #include "StringUtils.h"
@@ -139,14 +139,17 @@ static void parseCommandLine(int argc, char **argv)
                 cardAid = argument[1];
                 if (argument[1].length() < 10 ||
                     argument[1].length() > 32 ||
-                    !ByteArrayUtil::isValidHexString(argument[1])) {
+                    !HexUtil::isValid(argument[1])) {
                     std::cout << "Invalid AID";
                     displayUsageAndExit();
                 }
+
             } else if (argument[0] == "-c" || argument[0] == "--card") {
                 cardReaderRegex = argument[1];
+
             } else if (argument[0] == "-s" || argument[0] == "--sam") {
                 samReaderRegex = argument[1];
+
             } else {
                 displayUsageAndExit();
             }
@@ -154,7 +157,7 @@ static void parseCommandLine(int argc, char **argv)
     } else {
         displayUsageAndExit();
     }
-  }
+}
 
 
 int main(int argc, char **argv)
