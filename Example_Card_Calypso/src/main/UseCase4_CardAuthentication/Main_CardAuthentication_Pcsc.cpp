@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -168,9 +168,9 @@ int main()
 
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setSamResource(samResource->getReader(),
-                                        std::dynamic_pointer_cast<CalypsoSam>(
-                                            samResource->getSmartCard()));
+    cardSecuritySetting->setControlSamResource(samResource->getReader(),
+                                               std::dynamic_pointer_cast<CalypsoSam>(
+                                                   samResource->getSmartCard()));
 
    try {
         /* Performs file reads using the card transaction manager in secure mode */

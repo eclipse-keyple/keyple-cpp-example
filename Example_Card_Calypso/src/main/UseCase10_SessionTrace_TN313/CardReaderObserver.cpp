@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -31,8 +31,19 @@
 using namespace calypsonet::terminal::calypso::card;
 using namespace calypsonet::terminal::calypso::transaction;
 using namespace keyple::card::calypso;
+using namespace keyple::card::generic;
 using namespace keyple::core::service;
 using namespace keyple::core::util::cpp;
+
+const std::string CardReaderObserver::ANSI_RESET = "\u001B[0m";
+const std::string CardReaderObserver::ANSI_BLACK = "\u001B[30m";
+const std::string CardReaderObserver::ANSI_RED = "\u001B[31m";
+const std::string CardReaderObserver::ANSI_GREEN = "\u001B[32m";
+const std::string CardReaderObserver::ANSI_YELLOW = "\u001B[33m";
+const std::string CardReaderObserver::ANSI_BLUE = "\u001B[34m";
+const std::string CardReaderObserver::ANSI_PURPLE = "\u001B[35m";
+const std::string CardReaderObserver::ANSI_CYAN = "\u001B[36m";
+const std::string CardReaderObserver::ANSI_WHITE = "\u001B[37m";
 
 CardReaderObserver::CardReaderObserver(std::shared_ptr<CardReader> cardReader,
                                        std::shared_ptr<CardSelectionManager> cardSelectionManager,
@@ -49,6 +60,8 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
         /* Read the current time used later to compute the transaction time */
         const unsigned long long timeStamp = System::currentTimeMillis();
 
+        std::shared_ptr<CardTransactionManager> cardTransactionManager = nullptr;
+
         try {
             /* The selection matched, get the resulting CalypsoCard */
             auto calypsoCard =
@@ -62,10 +75,10 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
              * Create a transaction manager, open a Secure Session, read Environment, Event Log and
              * Contract List.
              */
-            std::shared_ptr<CardTransactionManager> cardTransactionManager =
-                CalypsoExtensionService::getInstance()->createCardTransaction(mCardReader,
-                                                                              calypsoCard,
-                                                                              mCardSecuritySetting);
+            cardTransactionManager = CalypsoExtensionService::getInstance()
+                                         ->createCardTransaction(mCardReader,
+                                                                 calypsoCard,
+                                                                 mCardSecuritySetting);
             cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                                       CalypsoConstants::RECORD_NUMBER_1)
                                    .prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG,
@@ -81,7 +94,7 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
             /* Read the elected contract */
             cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACTS,
                                                       CalypsoConstants::RECORD_NUMBER_1)
-                                   .processCardCommands();
+                                   .processCommands();
 
             /*
              * Place for the analysis of the contracts
@@ -93,10 +106,16 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
                                    .processClosing();
 
             /* Display transaction time */
-            mLogger->info("Transaction succeeded. Execution time: % ms\n",
-                          System::currentTimeMillis() - timeStamp);
+            mLogger->info("%Transaction succeeded. Execution time: % ms%\n",
+                          ANSI_GREEN,
+                          System::currentTimeMillis() - timeStamp,
+                          ANSI_RESET);
+
         } catch (const Exception& e) {
-            mLogger->error("Transaction failed with exception: % - %\n", e.getMessage(), e);
+            mLogger->error("%Transaction failed with exception: %%\n",
+                           ANSI_RED,
+                           e.getMessage(),
+                           ANSI_RESET);
         }
         }
         break;

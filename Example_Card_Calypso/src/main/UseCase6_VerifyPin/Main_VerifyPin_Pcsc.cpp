@@ -186,9 +186,9 @@ int main()
 
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setSamResource(samResource->getReader(),
-                                        std::dynamic_pointer_cast<CalypsoSam>(
-                                            samResource->getSmartCard()))
+    cardSecuritySetting->setControlSamResource(samResource->getReader(),
+                                               std::dynamic_pointer_cast<CalypsoSam>(
+                                                   samResource->getSmartCard()))
                         .setPinVerificationCipheringKey(
                             CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KIF,
                             CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC);

@@ -56,7 +56,7 @@ void ConfigurationUtil::ReaderConfigurator::setupReader(std::shared_ptr<Reader> 
         auto pcscReader = std::dynamic_pointer_cast<PcscReader>(readerExtension);
         if (pcscReader) {
             pcscReader->setContactless(false)
-                       .setIsoProtocol(PcscReader::IsoProtocol::T0)
+                       .setIsoProtocol(PcscReader::IsoProtocol::ANY)
                        .setSharingMode(PcscReader::SharingMode::SHARED);
         }
     } catch (const Exception& e) {
@@ -66,10 +66,10 @@ void ConfigurationUtil::ReaderConfigurator::setupReader(std::shared_ptr<Reader> 
 
 /* CONFIGURATION UTIL --------------------------------------------------------------------------- */
 
-const std::string ConfigurationUtil::CARD_READER_NAME_REGEX = 
+const std::string ConfigurationUtil::CARD_READER_NAME_REGEX =
     ".*ASK LoGO.*|.*Contactless.*|.*ACR122U.*|.*00 01.*|.*5x21-CL 0.*";
-const std::string ConfigurationUtil::SAM_READER_NAME_REGEX = 
-    ".*Identive.*|.*HID.*|.*00 00.*|.*5x21 0.*";
+const std::string ConfigurationUtil::SAM_READER_NAME_REGEX =
+    ".*Identive.*|.*HID.*|.*SAM.*|.*00 00.*|.*5x21 0.*";
 const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
     LoggerFactory::getLogger(typeid(ConfigurationUtil));
 

@@ -154,7 +154,7 @@ int main()
         cardExtension->createCardTransactionWithoutSecurity(cardReader, calypsoCard);
     extension->prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG, 1)
               .prepareReleaseCardChannel()
-              .processCardCommands();
+              .processCommands();
 
     logger->info("File %h, rec 1: FILE_CONTENT = %\n",
                  StringUtils::format("%02X", CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER),

@@ -90,4 +90,17 @@ private:
      */
     const std::vector<uint8_t> mNewEventRecord =
         HexUtil::toByteArray("8013C8EC55667788112233445566778811223344556677881122334455");
+
+    /**
+     *
+     */
+    static const std::string ANSI_RESET;
+    static const std::string ANSI_BLACK;
+    static const std::string ANSI_RED;
+    static const std::string ANSI_GREEN;
+    static const std::string ANSI_YELLOW;
+    static const std::string ANSI_BLUE;
+    static const std::string ANSI_PURPLE;
+    static const std::string ANSI_CYAN;
+    static const std::string ANSI_WHITE;
 };

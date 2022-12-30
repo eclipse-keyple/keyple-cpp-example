@@ -89,9 +89,9 @@ static bool isVerbose;
 static void displayUsageAndExit()
 {
     std::cout << "Available options:" << std::endl;
-    std::cout << " -d, --default                  use default values (is equivalent to -a=\"31544" \
-              << "9432E49434131\" -c=\".*ASK LoGO.*|.*Contactless.*\" -s=\".*Identive.*|.*HID.*\"" \
-              << ")" << std::endl;
+    std::cout << " -d, --default                  use default values (is equivalent to -a=" \
+              << CalypsoConstants::AID <<  " -c=" << ConfigurationUtil::CARD_READER_NAME_REGEX \
+              << " -s=" << ConfigurationUtil::SAM_READER_NAME_REGEX << ")" << std::endl;
     std::cout << " -a, --aid=\"APPLICATION_AID\"    between 5 and 16 hex bytes (e.g. \"315449432E" \
               << "49434131\")" << std::endl;
     std::cout << " -c, --card=\"CARD_READER_REGEX\" regular expression matching the card reader n" \
@@ -99,10 +99,12 @@ static void displayUsageAndExit()
     std::cout << " -s, --sam=\"SAM_READER_REGEX\"   regular expression matching the SAM reader na" \
               << "me (e.g. \"HID.*\")" << std::endl;
     std::cout << " -v, --verbose                  set the log level to TRACE" << std::endl;
+    std::cout << "PC/SC protocol is set to `\"ANY\" ('*') for the SAM reader, \"T1\" ('T=1') for " \
+                 "the card reader.";
 
     exit(-1);
 }
-
+CalypsoConstants::AID
 /**
  * Analyses the command line and sets the specified parameters.
  *
@@ -238,9 +240,9 @@ int main(int argc, char **argv)
 
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setSamResource(samResource->getReader(),
-                                        std::dynamic_pointer_cast<CalypsoSam>(
-                                            samResource->getSmartCard()));
+    cardSecuritySetting->setControlSamResource(samResource->getReader(),
+                                               std::dynamic_pointer_cast<CalypsoSam>(
+                                                   samResource->getSmartCard()));
 
     /* Create and add a card observer for this reader */
     auto cardReaderObserver =

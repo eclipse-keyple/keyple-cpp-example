@@ -166,9 +166,9 @@ int main()
 
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setSamResource(samResource->getReader(),
-                                        std::dynamic_pointer_cast<CalypsoSam>(
-                                            samResource->getSmartCard()));
+    cardSecuritySetting->setControlSamResource(samResource->getReader(),
+                                               std::dynamic_pointer_cast<CalypsoSam>(
+                                                   samResource->getSmartCard()));
 
     try {
         /*
@@ -178,7 +178,7 @@ int main()
         std::shared_ptr<CardTransactionManager> cardTransaction =
             cardExtension->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
         cardTransaction->prepareSvGet(SvOperation::RELOAD, SvAction::DO)
-                        .processCardCommands();
+                        .processCommands();
 
         /* Display the current SV status */
         logger->info("Current SV status (SV Get for RELOAD):\n");
@@ -191,7 +191,7 @@ int main()
 
         /* Execute the command and close the communication after */
         cardTransaction->prepareReleaseCardChannel();
-        cardTransaction->processCardCommands();
+        cardTransaction->processCommands();
 
     } catch (const Exception& e) {
         (void)e;
