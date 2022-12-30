@@ -105,7 +105,7 @@ public:
     /**
      * {@inheritDoc}
      */
-    void setupReader(std::shared_ptr<Reader> reader) override {
+    void setupReader(std::shared_ptr<CardReader> reader) override {
         /* Configure the reader with parameters suitable for contactless operations */
         try {
             std::dynamic_pointer_cast<ConfigurableReader>(reader)->activateProtocol(

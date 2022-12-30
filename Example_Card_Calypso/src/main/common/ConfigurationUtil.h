@@ -12,6 +12,9 @@
 
 #pragma once
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+
 /* Keyple Core Service */
 #include "Plugin.h"
 
@@ -21,6 +24,8 @@
 /* Keyple Service Resource */
 #include "ReaderConfiguratorSpi.h"
 
+using namespace calypsonet::terminal::reader;
+using namespace keyple::core::service;
 using namespace keyple::core::service::resource::spi;
 using namespace keyple::core::util::cpp;
 
@@ -73,7 +78,7 @@ private:
         /**
          * {@inheritDoc}
          */
-        void setupReader(std::shared_ptr<Reader> reader) override;
+        void setupReader(std::shared_ptr<CardReader> reader) override;
 
     private:
         /**
