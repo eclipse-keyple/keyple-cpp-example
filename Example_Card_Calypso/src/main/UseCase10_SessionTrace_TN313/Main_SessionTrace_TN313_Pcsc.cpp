@@ -104,7 +104,7 @@ static void displayUsageAndExit()
 
     exit(-1);
 }
-CalypsoConstants::AID
+
 /**
  * Analyses the command line and sets the specified parameters.
  *
