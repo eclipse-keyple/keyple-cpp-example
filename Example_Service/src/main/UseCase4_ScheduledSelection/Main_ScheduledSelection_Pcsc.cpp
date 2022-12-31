@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -80,7 +80,8 @@ int main()
 
     /* Activate the ISO14443 card protocol */
     std::dynamic_pointer_cast<ConfigurableReader>(reader)
-        ->activateProtocol("ISO_14443_4", "ISO_14443_4.name");
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     /* Get the generic card extension service */
     std::shared_ptr<GenericExtensionService> cardExtension = GenericExtensionService::getInstance();
@@ -99,7 +100,7 @@ int main()
         smartCardService->createCardSelectionManager();
     /* Create a card selection using the generic card extension */
     std::shared_ptr<GenericCardSelection> cardSelection = cardExtension->createCardSelection();
-    cardSelection->filterByCardProtocol("ISO_14443_4");
+    cardSelection->filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL);
     cardSelection->filterByDfName(ConfigurationUtil::AID_EMV_PPSE);
 
     /*

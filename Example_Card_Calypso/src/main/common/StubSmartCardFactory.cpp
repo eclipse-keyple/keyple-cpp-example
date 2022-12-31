@@ -12,30 +12,25 @@
 
 #include "StubSmartCardFactory.h"
 
+#include "ConfigurationUtil.h"
+
 /* Keyple Core Util */
-#include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "HexUtil.h"
 
 /* Keyple Plugin Stub */
 #include "StubSmartCard.h"
 
 using namespace keyple::core::util;
-using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::stub;
 
 const std::string StubSmartCardFactory::CARD_POWER_ON_DATA = "3B888001000000009171710098";
 const std::string StubSmartCardFactory::SAM_POWER_ON_DATA =
     "3B3F9600805A0080C120000012345678829000";
-const std::string StubSmartCardFactory::CARD_PROTOCOL =
-    ContactlessCardCommonProtocol::ISO_14443_4.getName();
-const std::string StubSmartCardFactory::SAM_PROTOCOL =
-    ContactCardCommonProtocol::ISO_7816_3_T0.getName();
 
 std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubCard =
     StubSmartCard::builder()
         ->withPowerOnData(HexUtil::toByteArray(CARD_POWER_ON_DATA))
-        .withProtocol(CARD_PROTOCOL)
+        .withProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
         /* Select application */
         .withSimulatedCommand(
             "00A4040009315449432E4943413100",
@@ -59,7 +54,7 @@ std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubCard =
 std::shared_ptr<StubSmartCard> StubSmartCardFactory::mStubSam =
     StubSmartCard::builder()
         ->withPowerOnData(HexUtil::toByteArray(SAM_POWER_ON_DATA))
-        .withProtocol(SAM_PROTOCOL)
+        .withProtocol(ConfigurationUtil::SAM_PROTOCOL)
         /* Select diversifier */
         .withSimulatedCommand("801400000800000000AABBCCDD", "9000")
         /* Get challenge */

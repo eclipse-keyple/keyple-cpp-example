@@ -33,14 +33,19 @@ using namespace keyple::core::util::cpp;
 class ConfigurationUtil final {
 public:
     /**
-     * 
+     *
      */
     static const std::string AID_EMV_PPSE;
 
     /**
-     * 
+     *
      */
     static const std::string AID_KEYPLE_PREFIX;
+
+    /**
+     *
+     */
+    static const std::string ISO_CARD_PROTOCOL;
 
     /*
      * Common reader identifiers
@@ -60,12 +65,12 @@ public:
      * @throws IllegalStateException If the reader is not found.
      * @since 2.0.0
      */
-    static std::shared_ptr<Reader> getCardReader(std::shared_ptr<Plugin> plugin, 
+    static std::shared_ptr<Reader> getCardReader(std::shared_ptr<Plugin> plugin,
                                                  const std::string& readerNameRegex);
 
 private:
     /**
-     * 
+     *
      */
     static const std::unique_ptr<Logger> mLogger;
 

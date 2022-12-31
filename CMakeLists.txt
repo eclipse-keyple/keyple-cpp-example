@@ -1,5 +1,5 @@
 # *************************************************************************************************
-# Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                         *
+# Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                         *
 #                                                                                                 *
 # See the NOTICE file(s) distributed with this work for additional information regarding          *
 # copyright ownership.                                                                            *
@@ -45,3 +45,16 @@ ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Card_Calypso)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Plugin_PCSC)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Service)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Service_Resource)
+
+# Dependencies (for later use):
+#
+# calypsonet-terminal-reader-cpp-api:1.0.+
+# calypsonet-terminal-calypso-cpp-api:1.2.+
+#
+# keyple-common-cpp-api:2.0.+
+# keyple-service-cpp-lib:2.0.1
+# keyple-service-resource-cpp-lib:2.0.1
+# keyple-plugin-pcsc-cpp-lib:2.1.0
+# keyple-plugin-stub-cpp-lib:2.0.0
+# keyple-card-calypso-cpp-lib:2.2.0
+# keyple-util-cpp-lib:2.+

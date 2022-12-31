@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -22,7 +22,6 @@
 /* Keyple Core Util */
 #include "ByteArrayUtil.h"
 #include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 #include "StringUtils.h"
@@ -108,8 +107,8 @@ int main()
 
     /* Activate the ISO14443 card protocol */
     std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
-        ->activateProtocol(ContactlessCardCommonProtocol::ISO_14443_4.getName(),
-                           ContactlessCardCommonProtocol::ISO_14443_4.getName());
+        ->activateProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL,
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     logger->info("=============== " \
                  "UseCase Generic #2: scheduled selection " \
@@ -126,7 +125,7 @@ int main()
      */
     std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
     cardSelection->acceptInvalidatedCard()
-                  .filterByCardProtocol(ContactlessCardCommonProtocol::ISO_14443_4.getName())
+                  .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
                   .filterByDfName(CalypsoConstants::AID)
                   .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                      CalypsoConstants::RECORD_NUMBER_1);

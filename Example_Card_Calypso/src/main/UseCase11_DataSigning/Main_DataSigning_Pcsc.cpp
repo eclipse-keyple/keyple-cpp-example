@@ -19,8 +19,6 @@
 #include "SmartCardServiceProvider.h"
 
 /* Keyple Core Util */
-#include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
@@ -31,6 +29,7 @@
 #include "PcscPluginFactory.h"
 #include "PcscPluginFactoryBuilder.h"
 #include "PcscReader.h"
+#include "PcscSupportedContactProtocol.h"
 #include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Core Resource */
@@ -48,7 +47,6 @@ using namespace keyple::core::service::resource;
 using namespace keyple::core::util;
 using namespace keyple::core::util::cpp;
 using namespace keyple::core::util::cpp::exception;
-using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::pcsc;
 
 /**
@@ -103,8 +101,8 @@ public:
         /* Configure the reader with parameters suitable for contactless operations */
         try {
             std::dynamic_pointer_cast<ConfigurableReader>(reader)
-                ->activateProtocol(ContactCardCommonProtocol::ISO_7816_3_T0.getName(),
-                                   ContactCardCommonProtocol::ISO_7816_3_T0.getName());
+                ->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+                                   ConfigurationUtil::SAM_PROTOCOL);
 
             std::shared_ptr<KeypleReaderExtension> readerExtension =
                 reader->getExtension(typeid(KeypleReaderExtension));
@@ -265,10 +263,10 @@ int main(int argc, char **argv)
             }
             samTransactionManager =
                 CalypsoExtensionService::getInstance()
-                    ->createSamTransaction(cardResource->getReader(),
-                                           std::dynamic_pointer_cast<CalypsoSam>(cardResource)
-                                               ->getSmartCard(),
-                                           samSecuritySetting);
+                    ->createSamTransaction(
+                        cardResource->getReader(),
+                        std::dynamic_pointer_cast<CalypsoSam>(cardResource->getSmartCard()),
+                        samSecuritySetting);
 
             logger->info("Signing: data='%' with the key %/%\n",
                          DATA_TO_SIGN,
@@ -313,11 +311,12 @@ int main(int argc, char **argv)
                 break;
             }
 
-            samTransactionManager = CalypsoExtensionService::getInstance()->createSamTransaction(
-                                        cardResource->getReader(),
-                                        std::dynamic_pointer_cast<CalypsoSam>(cardResource)
-                                            ->getApplicationSubTypegetSmartCard(),
-                                        samSecuritySetting);
+            samTransactionManager =
+                CalypsoExtensionService::getInstance()
+                    ->createSamTransaction(
+                        cardResource->getReader(),
+                        std::dynamic_pointer_cast<CalypsoSam>(cardResource->getSmartCard()),
+                        samSecuritySetting);
 
             logger->info("Signing: data='%' with the key %/%\n",
                          DATA_TO_SIGN,

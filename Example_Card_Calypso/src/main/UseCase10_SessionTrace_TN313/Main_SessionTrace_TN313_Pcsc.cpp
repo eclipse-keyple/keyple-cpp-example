@@ -20,7 +20,6 @@
 
 /* Keyple Core Util */
 #include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
@@ -197,7 +196,7 @@ int main(int argc, char **argv)
     /* Activate the ISO14443 card protocol */
     std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
         ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-                           ContactlessCardCommonProtocol::ISO_14443_4.getName());
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     logger->info("Select application with AID = '%'\n", cardAid);
 
@@ -211,7 +210,7 @@ int main(int argc, char **argv)
      */
     std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
     cardSelection->acceptInvalidatedCard()
-                  .filterByCardProtocol(ContactlessCardCommonProtocol::ISO_14443_4.getName())
+                  .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
                   .filterByDfName(cardAid);
 
     /* Prepare the selection by adding the created Calypso selection to the card selection scenario. */

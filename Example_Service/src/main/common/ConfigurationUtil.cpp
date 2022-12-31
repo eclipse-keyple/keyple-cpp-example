@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -18,7 +18,6 @@
 #include "ConfigurableReader.h"
 
 /* Keyple Core Util */
-#include "ContactlessCardCommonProtocol.h"
 #include "IllegalStateException.h"
 
 /* Keyple Plugin Pcsc */
@@ -32,9 +31,10 @@ using namespace keyple::core::util::cpp::exception;
 
 const std::string ConfigurationUtil::AID_EMV_PPSE = "325041592E5359532E4444463031";
 const std::string ConfigurationUtil::AID_KEYPLE_PREFIX = "315449432E";
-const std::string ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX = 
+const std::string ConfigurationUtil::ISO_CARD_PROTOCOL = "ISO_14443_4_CARD";
+const std::string ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX =
     ".*ASK LoGO.*|.*Contactless.*|.*ACR122U.*|.*00 01.*|.*5x21-CL 0.*";
-const std::string ConfigurationUtil::CONTACT_READER_NAME_REGEX = 
+const std::string ConfigurationUtil::CONTACT_READER_NAME_REGEX =
     ".*Identive.*|.*HID.*|.*00 00.*|.*5x21 0.*";
 
 const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
@@ -53,7 +53,8 @@ std::shared_ptr<Reader> ConfigurationUtil::getCardReader(std::shared_ptr<Plugin>
             pcscReader->setContactless(true)
                        .setIsoProtocol(PcscReader::IsoProtocol::T1)
                        .setSharingMode(PcscReader::SharingMode::SHARED);
-            reader->activateProtocol("ISO_14443_4", "ISO_14443_4");
+            reader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                                     ISO_CARD_PROTOCOL);
 
             mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), reader->getName());
 

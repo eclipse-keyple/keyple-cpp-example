@@ -12,7 +12,6 @@
 
 /* Keyple Core Util */
 #include "HexUtil.h"
-#include "ContactCardCommonProtocol.h"
 #include "LoggerFactory.h"
 #include "Thread.h"
 
@@ -46,7 +45,6 @@ using namespace keyple::core::service;
 using namespace keyple::core::service::resource;
 using namespace keyple::core::util;
 using namespace keyple::core::util::cpp;
-using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::stub;
 
 /**
@@ -85,6 +83,7 @@ static const std::string RESOURCE_A = "RESOURCE_A";
 static const std::string RESOURCE_B = "RESOURCE_B";
 static const std::string READER_NAME_REGEX_A = ".*_A";
 static const std::string READER_NAME_REGEX_B = ".*_B";
+static const std::string SAM_PROTOCOL = "ISO_7816_3_T0";
 
 /**
  * Reader configurator used by the card resource service to setup the SAM reader with the required
@@ -108,9 +107,9 @@ public:
     void setupReader(std::shared_ptr<CardReader> reader) override {
         /* Configure the reader with parameters suitable for contactless operations */
         try {
-            std::dynamic_pointer_cast<ConfigurableReader>(reader)->activateProtocol(
-                ContactCardCommonProtocol::ISO_7816_3_T0.getName(),
-                ContactCardCommonProtocol::ISO_7816_3_T0.getName());
+            std::dynamic_pointer_cast<ConfigurableReader>(reader)
+                ->activateProtocol(SAM_PROTOCOL, SAM_PROTOCOL);
+
         } catch (const Exception& e) {
             logger->error("Exception raised while setting up the reader %\n", reader->getName(), e);
         }
@@ -286,7 +285,7 @@ int main()
                 ->insertCard(
                     StubSmartCard::builder()
                         ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_A))
-                        .withProtocol(ContactCardCommonProtocol::ISO_7816_3_T0.getName())
+                        .withProtocol(SAM_PROTOCOL)
                         .build());
             break;
         case '2':
@@ -298,7 +297,7 @@ int main()
                 ->insertCard(
                     StubSmartCard::builder()
                         ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_B))
-                         .withProtocol(ContactCardCommonProtocol::ISO_7816_3_T0.getName())
+                         .withProtocol(SAM_PROTOCOL)
                          .build());
             break;
         case '4':

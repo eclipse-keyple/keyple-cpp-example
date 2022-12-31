@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -48,22 +48,12 @@ private:
     /**
      *
      */
-    static const std::string CARD_PROTOCOL;
-
-    /**
-     *
-     */
     static std::shared_ptr<StubSmartCard> mStubCard;
 
     /**
      *
      */
     static const std::string SAM_POWER_ON_DATA;
-
-    /**
-     *
-     */
-    static const std::string SAM_PROTOCOL;
 
     /**
      *

@@ -42,6 +42,9 @@ public:
      */
     static const std::string CARD_READER_NAME_REGEX;
     static const std::string SAM_READER_NAME_REGEX;
+    static const std::string SAM_PROTOCOL;
+    static const std::string ISO_CARD_PROTOCOL;
+    static const std::string INNOVATRON_CARD_PROTOCOL;
 
     /**
      * Retrieves the first available reader in the provided plugin whose name matches the provided

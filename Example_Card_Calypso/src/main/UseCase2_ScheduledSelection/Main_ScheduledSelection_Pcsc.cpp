@@ -21,7 +21,6 @@
 /* Keyple Core Util */
 #include "ByteArrayUtil.h"
 #include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 #include "StringUtils.h"
@@ -101,7 +100,7 @@ int main()
 
     std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
         ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-                           ContactlessCardCommonProtocol::ISO_14443_4.getName());
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     logger->info("=============== UseCase Generic #2: scheduled selection ==================\n");
     logger->info("= #### Select application with AID = '%'\n", CalypsoConstants::AID);
@@ -116,7 +115,7 @@ int main()
      */
     std::shared_ptr<CalypsoCardSelection> selection = cardExtension->createCardSelection();
     selection->acceptInvalidatedCard()
-              .filterByCardProtocol(ContactlessCardCommonProtocol::ISO_14443_4.getName())
+              .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
               .filterByDfName(CalypsoConstants::AID)
               .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                  CalypsoConstants::RECORD_NUMBER_1);

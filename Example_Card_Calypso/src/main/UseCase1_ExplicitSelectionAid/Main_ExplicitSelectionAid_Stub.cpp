@@ -21,7 +21,6 @@
 /* Keyple Core Util */
 #include "HexUtil.h"
 #include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
 #include "StringUtils.h"
@@ -91,8 +90,8 @@ int main()
     std::shared_ptr<Reader> cardReader = plugin->getReader(CARD_READER_NAME);
 
     std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
-        ->activateProtocol(ContactlessCardCommonProtocol::ISO_14443_4.getName(),
-                           ContactlessCardCommonProtocol::ISO_14443_4.getName());
+        ->activateProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL,
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     /* Get the Calypso card extension service */
     auto cardExtension = CalypsoExtensionService::getInstance();

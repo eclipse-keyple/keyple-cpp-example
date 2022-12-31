@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -20,7 +20,6 @@
 
 /* Keyple Core Util */
 #include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
 #include "HexUtil.h"
 #include "IllegalStateException.h"
 #include "LoggerFactory.h"
@@ -94,8 +93,8 @@ int main()
         ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
 
     std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
-        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-                           ContactlessCardCommonProtocol::ISO_14443_4.getName());
+        ->activateProtocol(PcscSupportedContactlessProtocol::INNOVATRON_B_PRIME_CARD.getName(),
+                           ConfigurationUtil::INNOVATRON_CARD_PROTOCOL);
 
     /* Get the Calypso card extension service */
     std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
@@ -127,7 +126,7 @@ int main()
      */
     std::shared_ptr<CalypsoCardSelection> selection = cardExtension->createCardSelection();
     selection->acceptInvalidatedCard()
-              .filterByCardProtocol(ContactlessCardCommonProtocol::INNOVATRON_B_PRIME_CARD.getName())
+              .filterByCardProtocol(ConfigurationUtil::INNOVATRON_CARD_PROTOCOL)
               .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                  CalypsoConstants::RECORD_NUMBER_1);
 
