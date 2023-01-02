@@ -19,7 +19,6 @@
 
 /* Keyple Core Service */
 #include "Plugin.h"
-#include "Reader.h"
 
 using namespace keyple::core::service;
 using namespace keyple::core::util::cpp;
@@ -56,16 +55,16 @@ public:
     static const std::string CONTACT_READER_NAME_REGEX;
 
     /**
-     * Retrieves the first available reader in the provided plugin whose name matches the provided
-     * regular expression.
+     * Retrieves the name of the first available reader in the provided plugin whose name matches
+     * the provided regular expression.
      *
      * @param plugin The plugin to which the reader belongs.
      * @param readerNameRegex A regular expression matching the targeted reader.
-     * @return A not null reference.
+     * @return The name of the found reader.
      * @throws IllegalStateException If the reader is not found.
      * @since 2.0.0
      */
-    static std::shared_ptr<Reader> getCardReader(std::shared_ptr<Plugin> plugin,
+    static const std::string& getCardReaderName(std::shared_ptr<Plugin> plugin,
                                                  const std::string& readerNameRegex);
 
 private:

@@ -10,6 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Core Util */
 #include "HexUtil.h"
 #include "LoggerFactory.h"
@@ -39,6 +43,7 @@
 #include "KeyplePluginExtension.h"
 #include "KeypleReaderExtension.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::generic;
 using namespace keyple::core::common;
 using namespace keyple::core::service;
@@ -48,8 +53,6 @@ using namespace keyple::core::util::cpp;
 using namespace keyple::plugin::stub;
 
 /**
- *
- *
  * <h1>Use Case "resource service 1" – Card resource service (Stub)</h1>
  *
  * <p>We demonstrate here the usage of the card resource service with a local pool of Stub readers.
@@ -86,7 +89,7 @@ static const std::string READER_NAME_REGEX_B = ".*_B";
 static const std::string SAM_PROTOCOL = "ISO_7816_3_T0";
 
 /**
- * Reader configurator used by the card resource service to setup the SAM reader with the required
+ * Reader configurator used by the card resource service to set up the SAM reader with the required
  * settings.
  */
 class ReaderConfigurator : public ReaderConfiguratorSpi {
@@ -107,7 +110,7 @@ public:
     void setupReader(std::shared_ptr<CardReader> reader) override {
         /* Configure the reader with parameters suitable for contactless operations */
         try {
-            std::dynamic_pointer_cast<ConfigurableReader>(reader)
+            std::dynamic_pointer_cast<ConfigurableCardReader>(reader)
                 ->activateProtocol(SAM_PROTOCOL, SAM_PROTOCOL);
 
         } catch (const Exception& e) {
@@ -268,9 +271,6 @@ int main()
     /* Sleep for a moment to let the readers being detected */
     Thread::sleep(2000);
 
-    std::shared_ptr<Reader> readerA = plugin->getReader(READER_A);
-    std::shared_ptr<Reader> readerB = plugin->getReader(READER_B);
-
     logger->info("= #### Connect/disconnect readers, insert/remove cards, watch the log\n");
 
     bool loop = true;
@@ -281,19 +281,22 @@ int main()
         char c = getInput();
         switch (c) {
         case '1':
-            std::dynamic_pointer_cast<StubReader>(readerA->getExtension(typeid(StubReader)))
-                ->insertCard(
-                    StubSmartCard::builder()
-                        ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_A))
-                        .withProtocol(SAM_PROTOCOL)
-                        .build());
+            std::dynamic_pointer_cast<StubReader>(
+                plugin->getReaderExtension(typeid(StubReader), READER_A))
+                    ->insertCard(
+                        StubSmartCard::builder()
+                            ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_A))
+                            .withProtocol(SAM_PROTOCOL)
+                            .build());
             break;
         case '2':
-            std::dynamic_pointer_cast<StubReader>(readerA->getExtension(typeid(StubReader)))
-                ->removeCard();
+            std::dynamic_pointer_cast<StubReader>(
+                plugin->getReaderExtension(typeid(StubReader), READER_A))
+                    ->removeCard();
             break;
         case '3':
-            std::dynamic_pointer_cast<StubReader>(readerB->getExtension(typeid(StubReader)))
+            std::dynamic_pointer_cast<StubReader>(
+                plugin->getReaderExtension(typeid(StubReader), READER_B))
                 ->insertCard(
                     StubSmartCard::builder()
                         ->withPowerOnData(HexUtil::toByteArray(ATR_CARD_B))
@@ -301,8 +304,9 @@ int main()
                          .build());
             break;
         case '4':
-            std::dynamic_pointer_cast<StubReader>(readerB->getExtension(typeid(StubReader)))
-                ->removeCard();
+            std::dynamic_pointer_cast<StubReader>(
+                plugin->getReaderExtension(typeid(StubReader), READER_B))
+                    ->removeCard();
             break;
         case '5':
             cardResourceA = cardResourceService->getCardResource(RESOURCE_A);

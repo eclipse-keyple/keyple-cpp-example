@@ -10,6 +10,9 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "ObservableCardReader.h"
+
 /* Keyple Core Util */
 #include "LoggerFactory.h"
 
@@ -40,7 +43,7 @@ using namespace keyple::plugin::pcsc;
  * <h1>Use Case Generic 7 – plugin and reader observation (PC/SC)</h1>
  *
  * <p>We demonstrate here the monitoring of an {@link ObservablePlugin} to be notified of reader
- * connection/disconnection, and also the monitoring of an {@link ObservableReader} to be notified
+ * connection/disconnection, and also the monitoring of an ObservableCardReader to be notified
  * of card insertion/removal.
  *
  * <h2>Scenario:</h2>
@@ -71,8 +74,9 @@ int main()
      * Register the PcscPlugin with the SmartCardService, get the corresponding generic plugin in
      * return.
      */
-    std::shared_ptr<Plugin> plugin =
-        smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
+    std::shared_ptr<ObservablePlugin> plugin =
+        std::dynamic_pointer_cast<ObservablePlugin>(
+            smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build()));
 
     /*
      * We add an observer to each plugin (only one in this example) the readers observers will be
@@ -81,7 +85,13 @@ int main()
      * observer.
      */
     logger->info("Add observer PLUGINNAME = %\n", plugin->getName());
-    auto pluginObserver = std::make_shared<PluginObserver>(plugin->getReaders());
+    /* C++: hack */
+    const std::vector<std::shared_ptr<Reader>> readers = plugin->getReaders();
+    std::vector<std::shared_ptr<CardReader>> cardReaders;
+    for (const auto& reader : readers) {
+        cardReaders.push_back(std::dynamic_pointer_cast<CardReader>(reader));
+    }
+    auto pluginObserver = std::make_shared<PluginObserver>(cardReaders);
     auto observable = std::dynamic_pointer_cast<ObservablePlugin>(plugin);
     observable->setPluginObservationExceptionHandler(pluginObserver);
     observable->addObserver(pluginObserver);

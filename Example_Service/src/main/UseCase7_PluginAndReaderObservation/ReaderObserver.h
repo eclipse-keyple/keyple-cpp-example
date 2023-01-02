@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022    Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -16,6 +16,11 @@
 #include "CardReaderEvent.h"
 #include "CardReaderObservationExceptionHandlerSpi.h"
 #include "CardReaderObserverSpi.h"
+#include "ObservableCardReader.h"
+
+/* Keyple Core Service */
+#include "SmartCardService.h"
+#include "SmartCardServiceProvider.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -23,6 +28,7 @@
 using namespace calypsonet::terminal::reader;
 using namespace calypsonet::terminal::reader::spi;
 using namespace keyple::core::util::cpp;
+using namespace keyple::core::service;
 
 /**
  * (package-private)<br>
@@ -35,10 +41,10 @@ class ReaderObserver
 : public CardReaderObserverSpi, public CardReaderObservationExceptionHandlerSpi {
 public:
     /**
-     * 
+     *
      */
     virtual ~ReaderObserver() = default;
-    
+
     /**
      *
      */
@@ -57,4 +63,10 @@ private:
      *
      */
     const std::unique_ptr<Logger> mLogger = LoggerFactory::getLogger(typeid(ReaderObserver));
+
+    /**
+     *
+     */
+    const std::shared_ptr<SmartCardService> smartCardService =
+        SmartCardServiceProvider::getService();
 };

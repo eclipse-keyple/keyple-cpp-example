@@ -10,6 +10,9 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
 
@@ -41,6 +44,7 @@
 #include "CardReaderObserver.h"
 #include "ConfigurationUtil.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
 using namespace keyple::core::service::resource;
@@ -185,16 +189,26 @@ int main(int argc, char **argv)
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
+        CalypsoExtensionService::getInstance();
 
      /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
-    /* Retrieve the card reader */
-    std::shared_ptr<Reader> cardReader = ConfigurationUtil::getCardReader(plugin, cardReaderRegex);
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin, cardReaderRegex);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
+
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
 
     /* Activate the ISO14443 card protocol */
-    std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
                            ConfigurationUtil::ISO_CARD_PROTOCOL);
 
@@ -208,7 +222,7 @@ int main(int argc, char **argv)
      * Create a card selection using the Calypso card extension.
      * Select the card and read the record 1 of the file ENVIRONMENT_AND_HOLDER
      */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<CalypsoCardSelection>  cardSelection = calypsoCardService->createCardSelection();
     cardSelection->acceptInvalidatedCard()
                   .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
                   .filterByDfName(cardAid);

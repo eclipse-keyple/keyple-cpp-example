@@ -29,7 +29,6 @@
 
 /* Keyple Plugin Pcsc */
 #include "PcscReader.h"
-#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Service Resource */
 #include "CardResourceServiceProvider.h"
@@ -39,27 +38,31 @@ using namespace keyple::card::calypso;
 using namespace keyple::core::common;
 using namespace keyple::core::service::resource;
 using namespace keyple::core::util::cpp::exception;
-using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::pcsc;
 
 /* READER CONFIGURATOR -------------------------------------------------------------------------- */
 
 ConfigurationUtil::ReaderConfigurator::ReaderConfigurator() {}
 
-void ConfigurationUtil::ReaderConfigurator::setupReader(std::shared_ptr<Reader> reader)
+void ConfigurationUtil::ReaderConfigurator::setupReader(std::shared_ptr<CardReader> cardReader)
 {
     /* Configure the reader with parameters suitable for contactless operations */
     try {
         std::shared_ptr<KeypleReaderExtension> readerExtension =
-            reader->getExtension(typeid(KeypleReaderExtension));
+            SmartCardServiceProvider::getService()
+                ->getPlugin(cardReader)
+                ->getReaderExtension(typeid(KeypleReaderExtension), cardReader->getName());
         auto pcscReader = std::dynamic_pointer_cast<PcscReader>(readerExtension);
         if (pcscReader) {
             pcscReader->setContactless(false)
                        .setIsoProtocol(PcscReader::IsoProtocol::ANY)
                        .setSharingMode(PcscReader::SharingMode::SHARED);
         }
+
     } catch (const Exception& e) {
-        mLogger->error("Exception raised while setting up the reader %\n", reader->getName(), e);
+        mLogger->error("Exception raised while setting up the reader %\n",
+                       cardReader->getName(),
+                       e);
     }
 }
 
@@ -78,32 +81,15 @@ const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
 
 ConfigurationUtil::ConfigurationUtil() {}
 
-std::shared_ptr<Reader> ConfigurationUtil::getCardReader(std::shared_ptr<Plugin> plugin,
-                                                         const std::string& readerNameRegex)
+const std::string& ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                                        const std::string& readerNameRegex)
 {
     const std::regex nameRegex(readerNameRegex);
 
     for (const auto& readerName : plugin->getReaderNames()) {
         if (std::regex_match(readerName, nameRegex)) {
-            auto reader = std::dynamic_pointer_cast<ConfigurableReader>(
-                              plugin->getReader(readerName));
-
-            /* Configure the reader with parameters suitable for contactless operations */
-            auto pcscReader =
-                std::dynamic_pointer_cast<PcscReader>(reader->getExtension(typeid(PcscReader)));
-
-            pcscReader->setContactless(true)
-                       .setIsoProtocol(PcscReader::IsoProtocol::T1)
-                       .setSharingMode(PcscReader::SharingMode::SHARED);
-
-            reader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-                                     ConfigurationUtil::ISO_CARD_PROTOCOL);
-
-            mLogger->info("Card reader, plugin; %, name: %\n",
-                          plugin->getName(),
-                          reader->getName());
-
-            return reader;
+            mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), readerName);
+            return readerName;
         }
     }
 

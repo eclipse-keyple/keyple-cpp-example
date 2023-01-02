@@ -10,6 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
 
@@ -32,6 +36,7 @@
 #include "PcscPluginFactoryBuilder.h"
 #include "PcscReader.h"
 #include "PcscSupportedContactlessProtocol.h"
+#include "PcscSupportedContactProtocol.h"
 
 /* Keyple Core Resource */
 #include "CardResource.h"
@@ -41,6 +46,7 @@
 #include "CalypsoConstants.h"
 #include "ConfigurationUtil.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
 using namespace keyple::core::service::resource;
@@ -51,8 +57,6 @@ using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case Calypso 4 – Calypso Card authentication (PC/SC)</h1>
  *
  * <p>We demonstrate here the authentication of a Calypso card using a Secure Session in which a
@@ -69,8 +73,7 @@ using namespace keyple::plugin::pcsc;
  *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
  *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
  *       an AID-based application selection scenario.
- *   <li>Creates a {@link CardTransactionManager} using {@link CardSecuritySetting} referencing the
- *       SAM profile defined in the card resource service.
+ *   <li>Creates a CardTransactionManager using CardSecuritySetting referencing the selected SAM.
  *   <li>Read a file record in Secure Session.
  * </ul>
  *
@@ -97,28 +100,49 @@ int main()
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
+        CalypsoExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
-    std::shared_ptr<Reader> cardReader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessCardReaderName =
+        ConfigurationUtil::getCardReaderName(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
+    std::shared_ptr<CardReader> calypsoCardReader = plugin->getReader(pcscContactlessCardReaderName);
 
-    /*
-     * Configure the card resource service to provide an adequate SAM for future secure operations.
-     * We suppose here, we use a Identive contact PC/SC reader as card reader.
-     */
-     ConfigurationUtil::setupCardResourceService(plugin,
-                                                 ConfigurationUtil::SAM_READER_NAME_REGEX,
-                                                 CalypsoConstants::SAM_PROFILE_NAME);
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessCardReaderName))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
+
+    std::dynamic_pointer_cast<ConfigurableCardReader>(calypsoCardReader)
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
+
+    /* Get the contact reader dedicated for Calypso SAM whose name matches the provided regex */
+    const std::string pcscContactSamReaderName =
+        ConfigurationUtil::getCardReaderName(plugin, ConfigurationUtil::SAM_READER_NAME_REGEX);
+    std::shared_ptr<CardReader> calypsoSamReader = plugin->getReader(pcscContactSamReaderName);
+
+    /* Configure the Calypso SAM reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactSamReaderName))
+            ->setContactless(false)
+             .setIsoProtocol(PcscReader::IsoProtocol::T0)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(calypsoSamReader)
+        ->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+                           ConfigurationUtil::SAM_PROTOCOL);
 
     logger->info("=============== " \
                  "UseCase Calypso #4: Calypso card authentication " \
                  "==================\n");
 
     /* Check if a card is present in the reader */
-    if (!cardReader->isCardPresent()) {
+    if (!calypsoCardReader->isCardPresent()) {
         throw IllegalStateException("No card is present in the reader.");
     }
 
@@ -128,19 +152,37 @@ int main()
     std::shared_ptr<CardSelectionManager> cardSelectionManager =
         smartCardService->createCardSelectionManager();
 
+    /* Create a SAM selection using the Calypso card extension. */
+    cardSelectionManager->prepareSelection(calypsoCardService->createSamSelection());
+
+    /* SAM communication: run the selection scenario. */
+    std::shared_ptr<CardSelectionResult> samSelectionResult =
+        cardSelectionManager->processCardSelectionScenario(calypsoSamReader);
+
+    /* Check the selection result. */
+    if (samSelectionResult->getActiveSmartCard() == nullptr) {
+        throw IllegalStateException("The selection of the SAM failed.");
+    }
+
+    /* Get the Calypso SAM SmartCard resulting of the selection. */
+    std::shared_ptr<CalypsoSam> calypsoSam =
+        std::dynamic_pointer_cast<CalypsoSam>(samSelectionResult->getActiveSmartCard());
+
+    logger->info("= SmartCard = %\n", calypsoSam);
+
     /*
      * Create a card selection using the Calypso card extension.
      * Prepare the selection by adding the created Calypso card selection to the card selection
      * scenario.
      */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<CalypsoCardSelection> cardSelection = calypsoCardService->createCardSelection();
     cardSelection->acceptInvalidatedCard()
                   .filterByDfName(CalypsoConstants::AID);
     cardSelectionManager->prepareSelection(cardSelection);
 
     /* Actual card communication: run the selection scenario */
     const std::shared_ptr<CardSelectionResult> selectionResult =
-        cardSelectionManager->processCardSelectionScenario(cardReader);
+        cardSelectionManager->processCardSelectionScenario(calypsoCardReader);
 
     /* Check the selection result */
     if (selectionResult->getActiveSmartCard() == nullptr) {
@@ -155,27 +197,21 @@ int main()
 
     logger->info("= SmartCard = %\n", calypsoCard);
 
+    const std::string csn = HexUtil::toHex(calypsoCard->getApplicationSerialNumber());
     logger->info("Calypso Serial Number = %\n",
                  HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
 
-    /*
-     * Create security settings that reference the same SAM profile requested from the card resource
-     * service.
-     */
-    std::shared_ptr<CardResource> samResource =
-        CardResourceServiceProvider::getService()
-            ->getCardResource(CalypsoConstants::SAM_PROFILE_NAME);
-
+    /* Create security settings that reference the SAM */
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samResource->getReader(),
-                                               std::dynamic_pointer_cast<CalypsoSam>(
-                                                   samResource->getSmartCard()));
+    cardSecuritySetting->setControlSamResource(calypsoSamReader, calypsoSam);
 
    try {
         /* Performs file reads using the card transaction manager in secure mode */
         std::shared_ptr<CardTransactionManager> cardTransaction =
-            cardExtension->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+            calypsoCardService->createCardTransaction(calypsoCardReader,
+                                                      calypsoCard,
+                                                      cardSecuritySetting);
         cardTransaction->prepareReadRecords(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                             CalypsoConstants::RECORD_NUMBER_1,
                                             CalypsoConstants::RECORD_NUMBER_1,
@@ -188,16 +224,22 @@ int main()
     }
 
     /* Finally */
-    try {
-        CardResourceServiceProvider::getService()->releaseCardResource(samResource);
-    } catch (const RuntimeException& e) {
-        logger->error("Error during the card resource release: %\n", e.getMessage(), e);
-    }
+    //      try {
+    //        calypsoCardService
+    //            .createSamTransaction(
+    //                calypsoSamReader, calypsoSam, calypsoCardService.createSamSecuritySetting())
+    //            .prepareReleaseCardChannel()
+    //            .processCommands();
+    //      } catch (RuntimeException e) {
+    //        logger.error("Error during the card resource release: {}", e.getMessage(), e);
+    //      }
 
     logger->info("The Secure Session ended successfully, the card is authenticated and the data " \
                  "read are certified\n");
+
+    const std::string sfiEnvHolder = HexUtil::toHex(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER);
     logger->info("File %h, rec 1: FILE_CONTENT = %\n",
-                 StringUtils::format("%02X", CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER),
+                 sfiEnvHolder,
                  calypsoCard->getFileBySfi(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER));
 
     logger->info("= #### End of the Calypso card processing\n");

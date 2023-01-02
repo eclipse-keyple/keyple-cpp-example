@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -15,6 +15,9 @@
 /* Calypsonet Terminal Calypso */
 #include "CalypsoCard.h"
 
+/* Calypsonet Terminal Reader */
+#include "ObservableCardReader.h"
+
 /* Keyple Core Util */
 #include "HexUtil.h"
 #include "StringUtils.h"
@@ -26,6 +29,7 @@
 #include "ObservableReader.h"
 
 using namespace calypsonet::terminal::calypso::card;
+using namespace calypsonet::terminal::reader;
 using namespace keyple::core::service;
 using namespace keyple::core::util;
 using namespace keyple::core::util::cpp;
@@ -39,7 +43,6 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
     switch (event->getType()) {
     case CardReaderEvent::Type::CARD_MATCHED:
         {
-        /* The selection has one target, get the result at index 0 */
         auto calypsoCard =
             std::dynamic_pointer_cast<CalypsoCard>(
                 mCardSelectionManager->parseScheduledCardSelectionsResponse(
@@ -78,7 +81,7 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
          * Informs the underlying layer of the end of the card processing, in order to manage the
          * removal sequence.
          */
-        std::dynamic_pointer_cast<ObservableReader>(mReader)->finalizeCardProcessing();
+        std::dynamic_pointer_cast<ObservableCardReader>(mReader)->finalizeCardProcessing();
     }
 }
 

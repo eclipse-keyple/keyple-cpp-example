@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -9,6 +9,10 @@
  *                                                                                                *
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
 
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
@@ -37,6 +41,7 @@
 #include "CardReaderObserver.h"
 #include "ConfigurationUtil.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
 using namespace keyple::core::util;
@@ -46,8 +51,6 @@ using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case Generic 2 – Scheduled Selection (PC/SC)</h1>
  *
  * <p>We demonstrate here the selection of a Calypso card using a scheduled scenario. The selection
@@ -90,15 +93,24 @@ int main()
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
+        CalypsoExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
-    std::shared_ptr<Reader> cardReader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
 
-    std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
+            ->setContactless(true)
+            .setIsoProtocol(PcscReader::IsoProtocol::T1)
+            .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
                            ConfigurationUtil::ISO_CARD_PROTOCOL);
 
@@ -113,7 +125,7 @@ int main()
      * Create a card selection using the Calypso card extension.
      * Select the card and read the record 1 of the file ENVIRONMENT_AND_HOLDER
      */
-    std::shared_ptr<CalypsoCardSelection> selection = cardExtension->createCardSelection();
+    std::shared_ptr<CalypsoCardSelection> selection = calypsoCardService->createCardSelection();
     selection->acceptInvalidatedCard()
               .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
               .filterByDfName(CalypsoConstants::AID)

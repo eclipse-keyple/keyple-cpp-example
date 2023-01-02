@@ -10,6 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
 
@@ -41,6 +45,7 @@
 #include "CalypsoConstants.h"
 #include "ConfigurationUtil.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
 using namespace keyple::core::service::resource;
@@ -51,8 +56,6 @@ using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case Calypso 4 – Calypso Card authentication (PC/SC)</h1>
  *
  * <p>We demonstrate here the debit of the Stored Value counter of a Calypso card.
@@ -92,22 +95,30 @@ int main()
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
+        CalypsoExtensionService::getInstance();
 
      /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
-    /*
-     * Get and setup the card reader
-     * We suppose here, we use a ASK LoGO contactless PC/SC reader as card reader.
-     */
-    std::shared_ptr<Reader> cardReader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
 
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     /*
      * Configure the card resource service to provide an adequate SAM for future secure operations.
-     * We suppose here, we use a Identive contact PC/SC reader as card reader.
+     * We suppose here, we use an Identive contact PC/SC reader as card reader.
      */
      ConfigurationUtil::setupCardResourceService(plugin,
                                                  ConfigurationUtil::SAM_READER_NAME_REGEX,
@@ -131,7 +142,7 @@ int main()
      * Prepare the selection by adding the created Calypso card selection to the card selection
      * scenario.
      */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<CalypsoCardSelection> cardSelection = calypsoCardService->createCardSelection();
     cardSelection->acceptInvalidatedCard()
                   .filterByDfName(CalypsoConstants::AID);
     cardSelectionManager->prepareSelection(cardSelection);
@@ -153,8 +164,8 @@ int main()
 
     logger->info("= SmartCard = %\n", calypsoCard);
 
-    logger->info("Calypso Serial Number = %\n",
-                 HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+    const std::string csn = HexUtil::toHex(calypsoCard->getApplicationSerialNumber());
+    logger->info("Calypso Serial Number = %\n", csn);
 
     /*
      * Create security settings that reference the same SAM profile requested from the card resource
@@ -174,7 +185,7 @@ int main()
     try {
         /* Performs file reads using the card transaction manager in non-secure mode */
         std::shared_ptr<CardTransactionManager> cardTransaction =
-            cardExtension->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+            calypsoCardService->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
         cardTransaction->prepareSvGet(SvOperation::DEBIT, SvAction::DO)
                         .processOpening(WriteAccessLevel::DEBIT);
 

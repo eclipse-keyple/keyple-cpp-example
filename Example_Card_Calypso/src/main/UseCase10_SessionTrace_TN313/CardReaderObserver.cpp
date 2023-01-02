@@ -16,11 +16,11 @@
 #include "CalypsoCard.h"
 #include "CardTransactionManager.h"
 
+/* Calypsonet Terminal Reader */
+#include "ObservableCardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
-
-/* Keyple Core Service */
-#include "ObservableReader.h"
 
 /* Keyple Core Util */
 #include "System.h"
@@ -30,8 +30,8 @@
 
 using namespace calypsonet::terminal::calypso::card;
 using namespace calypsonet::terminal::calypso::transaction;
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::calypso;
-using namespace keyple::card::generic;
 using namespace keyple::core::service;
 using namespace keyple::core::util::cpp;
 
@@ -60,8 +60,6 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
         /* Read the current time used later to compute the transaction time */
         const unsigned long long timeStamp = System::currentTimeMillis();
 
-        std::shared_ptr<CardTransactionManager> cardTransactionManager = nullptr;
-
         try {
             /* The selection matched, get the resulting CalypsoCard */
             auto calypsoCard =
@@ -75,10 +73,9 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
              * Create a transaction manager, open a Secure Session, read Environment, Event Log and
              * Contract List.
              */
-            cardTransactionManager = CalypsoExtensionService::getInstance()
-                                         ->createCardTransaction(mCardReader,
-                                                                 calypsoCard,
-                                                                 mCardSecuritySetting);
+            std::shared_ptr<CardTransactionManager> cardTransactionManager =
+                 CalypsoExtensionService::getInstance()
+                    ->createCardTransaction(mCardReader, calypsoCard, mCardSecuritySetting);
             cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                                       CalypsoConstants::RECORD_NUMBER_1)
                                    .prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG,
@@ -139,7 +136,7 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
         * Informs the underlying layer of the end of the card processing, in order to manage the
         * removal sequence.
         */
-       std::dynamic_pointer_cast<ObservableReader>(mCardReader)->finalizeCardProcessing();
+       std::dynamic_pointer_cast<ObservableCardReader>(mCardReader)->finalizeCardProcessing();
     }
 }
 

@@ -10,6 +10,9 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "ConfigurableCardReader.h"
+
 /* Keyple Card Generic */
 #include "GenericCardSelectionAdapter.h"
 #include "GenericExtensionService.h"
@@ -21,20 +24,21 @@
 #include "SmartCardServiceProvider.h"
 
 /* Keyple Plugin Pcsc */
+#include "PcscSupportedContactlessProtocol.h"
 #include "PcscPluginFactoryBuilder.h"
+#include "PcscReader.h"
 
 /* Keyple Cpp Example */
 #include "ConfigurationUtil.h"
 #include "CardReaderObserver.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::generic;
 using namespace keyple::core::service;
 using namespace keyple::core::util::cpp;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case Generic 4 – Scheduled Selection (PC/SC)</h1>
  *
  * <p>We present here a selection of ISO-14443-4 cards including the transmission of a "select
@@ -74,20 +78,30 @@ int main()
     std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
-    /* Get the contactless reader whose name matches the provided regex */
-    std::shared_ptr<Reader> reader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX);
+    /* Get the generic card extension service */
+    std::shared_ptr<GenericExtensionService> genericCardService =
+        GenericExtensionService::getInstance();
 
-    /* Activate the ISO14443 card protocol */
-    std::dynamic_pointer_cast<ConfigurableReader>(reader)
+    /* Verify that the extension's API level is consistent with the current service. */
+    smartCardService->checkCardExtension(genericCardService);
+
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin,
+                                             ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX);
+    auto observableCardReader =
+        std::dynamic_pointer_cast<ObservableCardReader>(
+            plugin->getReader(pcscContactlessReaderName));
+
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(observableCardReader)
         ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
                            ConfigurationUtil::ISO_CARD_PROTOCOL);
-
-    /* Get the generic card extension service */
-    std::shared_ptr<GenericExtensionService> cardExtension = GenericExtensionService::getInstance();
-
-    /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
 
     logger->info("=============== " \
                  "UseCase Generic #4: scheduled AID based selection " \
@@ -99,7 +113,7 @@ int main()
     std::shared_ptr<CardSelectionManager> cardSelectionManager =
         smartCardService->createCardSelectionManager();
     /* Create a card selection using the generic card extension */
-    std::shared_ptr<GenericCardSelection> cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<GenericCardSelection> cardSelection = genericCardService->createCardSelection();
     cardSelection->filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL);
     cardSelection->filterByDfName(ConfigurationUtil::AID_EMV_PPSE);
 
@@ -109,17 +123,17 @@ int main()
     cardSelectionManager->prepareSelection(cardSelection);
 
     /* Schedule the selection scenario */
-    cardSelectionManager->scheduleCardSelectionScenario(
-        std::dynamic_pointer_cast<ObservableReader>(reader),
-        ObservableCardReader::DetectionMode::REPEATING,
-        ObservableCardReader::NotificationMode::MATCHED_ONLY);
+    // cardSelectionManager->scheduleCardSelectionScenario(
+    //     std::dynamic_pointer_cast<ObservableReader>(reader),
+    //     ObservableCardReader::DetectionMode::REPEATING,
+    //     ObservableCardReader::NotificationMode::MATCHED_ONLY);
 
     /* Create and add an observer */
-    auto cardReaderObserver = std::make_shared<CardReaderObserver>(reader, cardSelectionManager);
-    auto observableReader = std::dynamic_pointer_cast<ObservableReader>(reader);
-    observableReader->setReaderObservationExceptionHandler(cardReaderObserver);
-    observableReader->addObserver(cardReaderObserver);
-    observableReader->startCardDetection(ObservableCardReader::DetectionMode::REPEATING);
+    auto cardReaderObserver =
+        std::make_shared<CardReaderObserver>(observableCardReader, cardSelectionManager);
+    observableCardReader->setReaderObservationExceptionHandler(cardReaderObserver);
+    observableCardReader->addObserver(cardReaderObserver);
+    observableCardReader->startCardDetection(ObservableCardReader::DetectionMode::REPEATING);
 
     logger->info("= #### Wait for a card. The AID based selection scenario will be processed as " \
                  "soon as a card is detected\n");

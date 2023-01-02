@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -17,6 +17,7 @@
 
 /* Keyple Core Service */
 #include "Plugin.h"
+#include "SmartCardServiceProvider.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -47,18 +48,18 @@ public:
     static const std::string INNOVATRON_CARD_PROTOCOL;
 
     /**
-     * Retrieves the first available reader in the provided plugin whose name matches the provided
-     * regular expression.
+     * Retrieves the name of the first available reader in the provided plugin whose name matches
+     * the provided regular expression.
      *
      * @param plugin The plugin to which the reader belongs.
      * @param readerNameRegex A regular expression matching the targeted reader.
-     * @return A not null reference.
+     * @return The name of the found reader.
      * @throw IllegalStateException If the reader is not found.
      */
-    static std::shared_ptr<Reader> getCardReader(std::shared_ptr<Plugin> plugin,
-                                                 const std::string& readerNameRegex);
+    static const std::string& getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                                const std::string& readerNameRegex);
     /**
-     * Setup the {@link CardResourceService} to provide a Calypso SAM C1 resource when requested.
+     * Set up the CardResourceService to provide a Calypso SAM C1 resource when requested.
      *
      * @param plugin The plugin to which the SAM reader belongs.
      * @param readerNameRegex A regular expression matching the expected SAM reader name.
@@ -70,9 +71,9 @@ public:
                                          const std::string& samProfileName);
 
 private:
-    /**
-     * Reader configurator used by the card resource service to setup the SAM reader with the required
-     * settings.
+    /*
+     * Reader configurator used by the card resource service to set up the SAM reader with the
+     * required settings.
      */
     class ReaderConfigurator final : public ReaderConfiguratorSpi {
     public:
@@ -81,7 +82,7 @@ private:
         /**
          * {@inheritDoc}
          */
-        void setupReader(std::shared_ptr<CardReader> reader) override;
+        void setupReader(std::shared_ptr<CardReader> cardReader) override;
 
     private:
         /**

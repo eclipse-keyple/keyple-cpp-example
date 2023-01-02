@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -9,6 +9,10 @@
  *                                                                                                *
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
 
 /* Keyple Card Generic */
 #include "GenericCardSelectionAdapter.h"
@@ -24,6 +28,8 @@
 
 /* Keyple Plugin Pcsc */
 #include "PcscPluginFactoryBuilder.h"
+#include "PcscReader.h"
+#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Cpp Example */
 #include "ConfigurationUtil.h"
@@ -34,8 +40,6 @@ using namespace keyple::core::util::cpp;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case Generic 2 – Protocol Based Selection (PC/SC)</h1>
  *
  * <p>We demonstrate here a selection of cards with the only condition being the type of
@@ -76,16 +80,28 @@ int main()
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the generic card extension service */
-    std::shared_ptr<GenericExtensionService> cardExtension = GenericExtensionService::getInstance();
+    std::shared_ptr<GenericExtensionService> genericCardService =
+        GenericExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(genericCardService);
 
     /* Get the contactless reader whose name matches the provided regex */
-    std::shared_ptr<Reader> reader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX);
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin,
+                                             ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
 
-    std::dynamic_pointer_cast<ConfigurableReader>(reader)
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(MIFARE_CLASSIC, MIFARE_CLASSIC);
 
     logger->info("=============== " \
@@ -93,7 +109,7 @@ int main()
                  "==================\n");
 
     /* Check if a card is present in the reader */
-    if (!reader->isCardPresent()) {
+    if (!cardReader->isCardPresent()) {
         logger->error("No card is present in the reader\n");
         return 0;
     }
@@ -105,7 +121,7 @@ int main()
         smartCardService->createCardSelectionManager();
 
     /*  Create a card selection using the generic card extension and specifying a Mifare filter. */
-    std::shared_ptr<GenericCardSelection> cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<GenericCardSelection> cardSelection = genericCardService->createCardSelection();
     cardSelection->filterByCardProtocol(MIFARE_CLASSIC);
 
     /*
@@ -115,7 +131,7 @@ int main()
 
     /* Actual card communication: run the selection scenario */
     std::shared_ptr<CardSelectionResult> selectionResult =
-        cardSelectionManager->processCardSelectionScenario(reader);
+        cardSelectionManager->processCardSelectionScenario(cardReader);
 
     /* Check the selection result */
     if (selectionResult->getActiveSmartCard() == nullptr) {

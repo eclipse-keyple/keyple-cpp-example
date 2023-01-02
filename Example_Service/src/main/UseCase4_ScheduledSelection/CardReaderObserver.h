@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -16,6 +16,7 @@
 #include "CardReaderObservationExceptionHandlerSpi.h"
 #include "CardReaderObserverSpi.h"
 #include "CardSelectionManager.h"
+#include "ObservableCardReader.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -40,16 +41,16 @@ public CardReaderObserverSpi,
 public CardReaderObservationExceptionHandlerSpi {
 public:
     /**
-     * 
+     *
      */
-    CardReaderObserver(std::shared_ptr<Reader> reader, 
+    CardReaderObserver(std::shared_ptr<ObservableCardReader> observableCardReader,
                        std::shared_ptr<CardSelectionManager> cardSelectionManager);
 
     /**
-     * 
+     *
      */
     virtual ~CardReaderObserver() = default;
-    
+
     /**
      * {@inheritDoc}
      *
@@ -63,22 +64,22 @@ public:
      * @since 2.0.0
      */
     void onReaderObservationError(const std::string& pluginName,
-                                  const std::string& readerName, 
+                                  const std::string& readerName,
                                   const std::shared_ptr<Exception> e) override;
 
 private:
     /**
-     * 
+     *
      */
     const std::unique_ptr<Logger> mLogger = LoggerFactory::getLogger(typeid(CardReaderObserver));
 
     /**
-     * 
+     *
      */
-    std::shared_ptr<Reader> mReader;
-    
+    std::shared_ptr<ObservableCardReader> mObservableCardReader;
+
     /**
-     * 
+     *
      */
     std::shared_ptr<CardSelectionManager> mCardSelectionManager;
 };

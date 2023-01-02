@@ -10,6 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Core Util */
 #include "HexUtil.h"
 #include "IllegalStateException.h"
@@ -27,6 +31,8 @@
 
 /* Keyple Plugin Pcsc */
 #include "PcscPluginFactoryBuilder.h"
+#include "PcscReader.h"
+#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Cpp Example */
 #include "ConfigurationUtil.h"
@@ -34,6 +40,7 @@
 /* Calypsonet Terminal Reader */
 #include "CardSelectionManager.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace calypsonet::terminal::reader::selection;
 using namespace keyple::card::generic;
 using namespace keyple::core::service;
@@ -42,8 +49,6 @@ using namespace keyple::core::util::cpp;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case Generic 6 – Grouped selections based on an AID prefix (PC/SC)</h1>
  *
  * <p>We demonstrate here the selection of two applications in a single card, with both applications
@@ -83,22 +88,35 @@ int main()
     std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
-    /* Get the contactless reader whose name matches the provided regex */
-    std::shared_ptr<Reader> reader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX);
-
     /* Get the generic card extension service */
-    std::shared_ptr<GenericExtensionService> cardExtension = GenericExtensionService::getInstance();
+    std::shared_ptr<GenericExtensionService> genericCardService =
+        GenericExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(genericCardService);
+
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin,
+                                             ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
+
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                           ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     logger->info("=============== " \
                  "UseCase Generic #6: Grouped selections based on an AID prefix " \
                  "===============\n");
 
     /* Check if a card is present in the reader */
-    if (!reader->isCardPresent()) {
+    if (!cardReader->isCardPresent()) {
       throw IllegalStateException("No card is present in the reader.");
     }
 
@@ -117,7 +135,7 @@ int main()
      * physical channel open.
      * Prepare the selection by adding the created generic selection to the card selection scenario.
      */
-    std::shared_ptr<GenericCardSelection> cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<GenericCardSelection> cardSelection = genericCardService->createCardSelection();
     cardSelection->filterByDfName(ConfigurationUtil::AID_KEYPLE_PREFIX);
     cardSelection->setFileOccurrence(GenericCardSelection::FileOccurrence::FIRST);
     cardSelectionManager->prepareSelection(cardSelection);
@@ -127,7 +145,7 @@ int main()
      * physical channel after.
      * Prepare the selection by adding the created generic selection to the card selection scenario.
      */
-    cardSelection = cardExtension->createCardSelection();
+    cardSelection = genericCardService->createCardSelection();
     cardSelection->filterByDfName(ConfigurationUtil::AID_KEYPLE_PREFIX);
     cardSelection->setFileOccurrence(GenericCardSelection::FileOccurrence::NEXT);
     cardSelectionManager->prepareSelection(cardSelection);
@@ -136,7 +154,7 @@ int main()
     cardSelectionManager->prepareReleaseChannel();
 
     std::shared_ptr<CardSelectionResult> cardSelectionsResult =
-        cardSelectionManager->processCardSelectionScenario(reader);
+        cardSelectionManager->processCardSelectionScenario(cardReader);
 
     /* Log the result */
     for (const auto& entry : cardSelectionsResult->getSmartCards()) {

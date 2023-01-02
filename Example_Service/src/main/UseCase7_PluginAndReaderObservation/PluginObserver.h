@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -12,6 +12,10 @@
 
 #pragma once
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Core Service */
 #include "PluginObservationExceptionHandlerSpi.h"
 #include "PluginObserverSpi.h"
@@ -20,10 +24,10 @@
 /* Keyple Core Util */
 #include "LoggerFactory.h"
 
-
 /* Examples */
 #include "ReaderObserver.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::core::service;
 using namespace keyple::core::service::spi;
 using namespace keyple::core::util::cpp;
@@ -38,10 +42,10 @@ using namespace keyple::core::util::cpp;
 class PluginObserver : public PluginObserverSpi, public PluginObservationExceptionHandlerSpi {
 public:
     /**
-     * 
+     *
      */
     virtual ~PluginObserver() = default;
-    
+
     /**
      * (package-private)<br>
      * Constructor.
@@ -51,7 +55,7 @@ public:
      * @param initialReaders The readers connected before the plugin is observed.
      * @since 2.0.0
      */
-    PluginObserver(const std::vector<std::shared_ptr<Reader>>& initialReaders);
+    PluginObserver(const std::vector<std::shared_ptr<CardReader>>& initialReaders);
 
     /**
      * {@inheritDoc}
@@ -84,12 +88,12 @@ private:
      *
      * @param reader The reader.
      */
-    void setupReader(std::shared_ptr<Reader> reader);
+    void setupReader(std::shared_ptr<CardReader> cardReader);
 
     /**
      * Add the unique observer to the provided observable reader.
      *
      * @param reader An observable reader
      */
-    void addObserver(std::shared_ptr<Reader> reader);
+    void addObserver(std::shared_ptr<CardReader> reader);
 };

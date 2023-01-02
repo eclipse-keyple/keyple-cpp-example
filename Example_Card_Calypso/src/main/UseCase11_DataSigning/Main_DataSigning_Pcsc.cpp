@@ -10,6 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
 
@@ -38,7 +42,6 @@
 
 /* Keyple Cpp Example */
 #include "CalypsoConstants.h"
-#include "CardReaderObserver.h"
 #include "ConfigurationUtil.h"
 
 using namespace keyple::card::calypso;
@@ -90,22 +93,24 @@ static const std::string KVC_TRACEABLE_STR = HexUtil::toHex(KVC_TRACEABLE);
 static const std::string DATA_TO_SIGN = "00112233445566778899AABBCCDDEEFF";
 
 /**
- * Reader configurator used by the card resource service to setup the SAM reader with the required
- * settings.
+ * Reader configurator used by the card resource service to set up the SAM reader with the
+ * required settings.
  */
-class ReaderConfigurator : public ReaderConfiguratorSpi {
+class ReaderConfigurator final : public ReaderConfiguratorSpi {
 public:
     /** {@inheritDoc} */
-    void setupReader(const std::shared_ptr<Reader> reader) override
+    void setupReader(const std::shared_ptr<CardReader> reader) override
     {
         /* Configure the reader with parameters suitable for contactless operations */
         try {
-            std::dynamic_pointer_cast<ConfigurableReader>(reader)
+            std::dynamic_pointer_cast<ConfigurableCardReader>(reader)
                 ->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
                                    ConfigurationUtil::SAM_PROTOCOL);
 
             std::shared_ptr<KeypleReaderExtension> readerExtension =
-                reader->getExtension(typeid(KeypleReaderExtension));
+                SmartCardServiceProvider::getService()
+                    ->getPlugin(reader)
+                    ->getReaderExtension(typeid(KeypleReaderExtension), reader->getName());
 
             auto pcscReader = std::dynamic_pointer_cast<PcscReader>(readerExtension);
             if (pcscReader) {
@@ -121,18 +126,18 @@ public:
         }
     }
 
-private:
-    const std::unique_ptr<Logger> mLogger = LoggerFactory::getLogger(typeid(ReaderConfigurator));
-
     /**
      * (private)<br>
      * Constructor.
      */
     ReaderConfigurator() {}
+
+private:
+    const std::unique_ptr<Logger> mLogger = LoggerFactory::getLogger(typeid(ReaderConfigurator));
 };
 
 /** Class implementing the exception handler SPIs for plugin and reader monitoring. */
-class PluginAndReaderExceptionHandler
+class PluginAndReaderExceptionHandler final
 : public PluginObservationExceptionHandlerSpi, public CardReaderObservationExceptionHandlerSpi {
 public:
     void onPluginObservationError(const std::string& pluginName, const std::shared_ptr<Exception> e)
@@ -143,7 +148,7 @@ public:
 
     void onReaderObservationError(const std::string& pluginName,
                                   const std::string& readerName,
-                                  const std::shared_ptr<Exception> e)
+                                  const std::shared_ptr<Exception> e) override
     {
         logger->error("An exception occurred while monitoring the reader '%/%'.\n",
                        pluginName,
@@ -170,7 +175,7 @@ static char getInput()
     return key;
 }
 
-int main(int argc, char **argv)
+int main()
 {
     /* Get the instance of the SmartCardService (singleton pattern) */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
@@ -183,10 +188,11 @@ int main(int argc, char **argv)
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> cardExtension = CalypsoExtensionService::getInstance();
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
+        CalypsoExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
     /* Create a SAM resource extension expecting a SAM having power-on data matching the regex */
     std::shared_ptr<CalypsoSamSelection> samSelection =

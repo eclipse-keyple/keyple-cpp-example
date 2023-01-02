@@ -10,6 +10,10 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
 
@@ -35,9 +39,10 @@
 /* Keyple Cpp Example */
 #include "CalypsoConstants.h"
 #include "CardReaderObserver.h"
+#include "ConfigurationUtil.h"
 #include "StubSmartCardFactory.h"
 
-
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
 using namespace keyple::core::util;
@@ -47,8 +52,6 @@ using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::stub;
 
 /**
- *
- *
  * <h1>Use Case Generic 2 – Scheduled Selection (Stub)</h1>
  *
  * <p>We demonstrate here the selection of a Calypso card using a scheduled scenario. The selection
@@ -98,15 +101,15 @@ int main()
     std::shared_ptr<Plugin> plugin = smartCardService->registerPlugin(pluginFactory);
 
     /* Get the Calypso card extension service */
-    auto cardExtension = CalypsoExtensionService::getInstance();
+    auto calypsoCardService = CalypsoExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
-    std::shared_ptr<Reader> cardReader = plugin->getReader(CARD_READER_NAME);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(CARD_READER_NAME);
 
     /* Activate the ISO14443 card protocol */
-    std::dynamic_pointer_cast<ConfigurableReader>(cardReader)
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL,
                            ConfigurationUtil::ISO_CARD_PROTOCOL);
 
@@ -123,7 +126,7 @@ int main()
      * Create a card selection using the Calypso card extension.
      * Select the card and read the record 1 of the file ENVIRONMENT_AND_HOLDER
      */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<CalypsoCardSelection> cardSelection = calypsoCardService->createCardSelection();
     cardSelection->acceptInvalidatedCard()
                   .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
                   .filterByDfName(CalypsoConstants::AID)
@@ -139,7 +142,7 @@ int main()
      * Schedule the selection scenario, request notification only if the card matches the selection
      * case.
      */
-    auto observableReader = std::dynamic_pointer_cast<ObservableReader>(cardReader);
+    auto observableReader = std::dynamic_pointer_cast<ObservableCardReader>(cardReader);
     cardSelectionManager->scheduleCardSelectionScenario(
         observableReader,
         ObservableCardReader::DetectionMode::REPEATING,
@@ -158,15 +161,17 @@ int main()
     Thread::sleep(100);
 
     logger->info("Insert stub card\n");
-    std::dynamic_pointer_cast<StubReader>(cardReader->getExtension(typeid(StubReader)))
-        ->insertCard(StubSmartCardFactory::getStubCard());
+    std::dynamic_pointer_cast<StubReader>(
+        plugin->getReaderExtension(typeid(StubReader), CARD_READER_NAME))
+            ->insertCard(StubSmartCardFactory::getStubCard());
 
     /* Wait a while. */
     Thread::sleep(1000);
 
     logger->info("Remove stub card\n");
-    std::dynamic_pointer_cast<StubReader>(cardReader->getExtension(typeid(StubReader)))
-        ->removeCard();
+    std::dynamic_pointer_cast<StubReader>(
+        plugin->getReaderExtension(typeid(StubReader), CARD_READER_NAME))
+            ->removeCard();
 
     /* Unregister plugin */
     smartCardService->unregisterPlugin(plugin->getName());

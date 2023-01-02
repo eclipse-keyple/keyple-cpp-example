@@ -14,17 +14,9 @@
 
 #include <regex>
 
-/* Keyple Core Service */
-#include "ConfigurableReader.h"
-
 /* Keyple Core Util */
 #include "IllegalStateException.h"
 
-/* Keyple Plugin Pcsc */
-#include "PcscReader.h"
-#include "PcscSupportedContactlessProtocol.h"
-
-using namespace keyple::plugin::pcsc;
 using namespace keyple::core::service;
 using namespace keyple::core::util;
 using namespace keyple::core::util::cpp::exception;
@@ -40,25 +32,13 @@ const std::string ConfigurationUtil::CONTACT_READER_NAME_REGEX =
 const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
     LoggerFactory::getLogger(typeid(ConfigurationUtil));
 
-std::shared_ptr<Reader> ConfigurationUtil::getCardReader(std::shared_ptr<Plugin> plugin,
-                                                         const std::string& readerNameRegex)
+const std::string& ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                                        const std::string& readerNameRegex)
 {
     for (const auto& readerName : plugin->getReaderNames()) {
         if (std::regex_match(readerName, std::regex(readerNameRegex))) {
-            auto reader = std::dynamic_pointer_cast<ConfigurableReader>(plugin->getReader(readerName));
-
-            /* Configure the reader with parameters suitable for contactless operations */
-            std::shared_ptr<KeypleReaderExtension> ext = reader->getExtension(typeid(PcscReader));
-            auto pcscReader = std::dynamic_pointer_cast<PcscReader>(ext);
-            pcscReader->setContactless(true)
-                       .setIsoProtocol(PcscReader::IsoProtocol::T1)
-                       .setSharingMode(PcscReader::SharingMode::SHARED);
-            reader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-                                     ISO_CARD_PROTOCOL);
-
-            mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), reader->getName());
-
-            return reader;
+            mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), readerName);
+            return readerName;
         }
     }
 

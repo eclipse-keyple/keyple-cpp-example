@@ -10,6 +10,9 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+
 /* Keyple Core Util */
 #include "HexUtil.h"
 #include "IllegalStateException.h"
@@ -80,7 +83,7 @@ static const std::vector<uint8_t> CMD_SET_LED_YELLOW = HexUtil::toByteArray("581
 static const std::vector<uint8_t> CMD_BUZZER_200MS = HexUtil::toByteArray("589300C8");
 
 /** Card observer class. */
-class CardObserver
+class CardObserver final
 : public CardReaderObserverSpi, public CardReaderObservationExceptionHandlerSpi {
 public:
     /**
@@ -122,10 +125,10 @@ public:
             /* Finally block */
             if (event->getType() != CardReaderEvent::Type::CARD_REMOVED) {
                 /* Indicates the end of the card processing (not needed for a removal event) */
-                std::dynamic_pointer_cast<ObservableReader>(SmartCardServiceProvider::getService()
-                                                                ->getPlugins()[0]
-                                                                ->getReader(event->getReaderName()))
-                    ->finalizeCardProcessing();
+                std::dynamic_pointer_cast<ObservableCardReader>(
+                    SmartCardServiceProvider::getService()->getPlugins()[0]
+                                                          ->getReader(event->getReaderName()))
+                        ->finalizeCardProcessing();
             }
 
         } catch (const Exception& e) {
@@ -135,10 +138,10 @@ public:
             /* Finally block */
             if (event->getType() != CardReaderEvent::Type::CARD_REMOVED) {
                 /* Indicates the end of the card processing (not needed for a removal event) */
-                std::dynamic_pointer_cast<ObservableReader>(SmartCardServiceProvider::getService()
-                                                                ->getPlugins()[0]
-                                                                ->getReader(event->getReaderName()))
-                    ->finalizeCardProcessing();
+                std::dynamic_pointer_cast<ObservableCardReader>(
+                    SmartCardServiceProvider::getService()->getPlugins()[0]
+                                                          ->getReader(event->getReaderName()))
+                        ->finalizeCardProcessing();
             }
         }
     }
@@ -170,10 +173,10 @@ int main()
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the contactless reader (we assume that a SpringCard Puck One reader is connected) */
-    std::shared_ptr<ObservableReader> reader = nullptr;
+    std::shared_ptr<ObservableCardReader> reader = nullptr;
     for (const auto& r : plugin->getReaders()) {
         if (StringUtils::contains(StringUtils::tolower(r->getName()), "contactless")) {
-            reader = std::dynamic_pointer_cast<ObservableReader>(r);
+            reader = std::dynamic_pointer_cast<ObservableCardReader>(r);
         }
     }
 
@@ -181,7 +184,9 @@ int main()
         throw IllegalStateException("Reader not found");
     }
 
-    std::shared_ptr<PcscReader> pcscReader = reader->getExtension(typeid(PcscReader));
+    std::shared_ptr<PcscReader> pcscReader =
+        std::dynamic_pointer_cast<PcscReader>(
+            plugin->getReaderExtension(typeid(PcscReader), reader->getName()));
 
     /* Change the LED color to yellow when no card is connected */
     for (int i = 0; i < 3; i++) {

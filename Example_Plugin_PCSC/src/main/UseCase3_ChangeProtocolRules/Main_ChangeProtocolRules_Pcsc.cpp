@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -9,6 +9,10 @@
  *                                                                                                *
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
+
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+#include "ConfigurableCardReader.h"
 
 /* Keyple Core Util */
 #include "LoggerFactory.h"
@@ -28,6 +32,7 @@
 /* Keyple Core Common */
 #include "KeypleCardExtension.h"
 
+using namespace calypsonet::terminal::reader;
 using namespace keyple::card::generic;
 using namespace keyple::core::common;
 using namespace keyple::core::util::cpp;
@@ -35,8 +40,6 @@ using namespace keyple::core::service;
 using namespace keyple::plugin::pcsc;
 
 /**
- *
- *
  * <h1>Use Case PC/SC 3 – Change of a protocol identification rule (PC/SC)</h1>
  *
  * <p>Here we demonstrate how to add a protocol rule to target a specific card technology by
@@ -87,16 +90,17 @@ int main()
                 .build());
 
     /* Get the first available reader (we assume that a single contactless reader is connected) */
-    std::shared_ptr<Reader> reader = plugin->getReaders()[1];
+    std::shared_ptr<CardReader> reader = plugin->getReaders()[1];
 
-    std::dynamic_pointer_cast<ConfigurableReader>(reader)
+    std::dynamic_pointer_cast<ConfigurableCardReader>(reader)
         ->activateProtocol(READER_PROTOCOL_MIFARE_CLASSIC_4_K, CARD_PROTOCOL_MIFARE_CLASSIC_4_K);
 
     /* Configure the reader for contactless operations */
-    std::dynamic_pointer_cast<PcscReader>(reader->getExtension(typeid(PcscReader)))
-        ->setContactless(true)
-         .setIsoProtocol(PcscReader::IsoProtocol::T1)
-         .setSharingMode(PcscReader::SharingMode::SHARED);
+    std::dynamic_pointer_cast<PcscReader>(
+        plugin->getReaderExtension(typeid(PcscReader), reader->getName()))
+            ->setContactless(true)
+             .setIsoProtocol(PcscReader::IsoProtocol::T1)
+             .setSharingMode(PcscReader::SharingMode::SHARED);
 
     /* Get the generic card extension service */
     std::shared_ptr<GenericExtensionService> cardExtension = GenericExtensionService::getInstance();

@@ -10,6 +10,9 @@
  * SPDX-License-Identifier: EPL-2.0                                                               *
  **************************************************************************************************/
 
+/* Calypsonet Terminal Reader */
+#include "CardReader.h"
+
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
 
@@ -105,13 +108,13 @@ int main()
     std::shared_ptr<Plugin> plugin = smartCardService->registerPlugin(pluginFactory);
 
     /* Get the Calypso card extension service */
-    auto cardExtension = CalypsoExtensionService::getInstance();
+    auto calypsoCardService = CalypsoExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(cardExtension);
+    smartCardService->checkCardExtension(calypsoCardService);
 
-    /* Get and setup the card reader */
-    std::shared_ptr<Reader> cardReader = plugin->getReader(CARD_READER_NAME);
+    /* Get and set up the card reader */
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(CARD_READER_NAME);
 
     /*
      * Configure the card resource service to provide an adequate SAM for future secure operations
@@ -140,7 +143,7 @@ int main()
      * Prepare the selection by adding the created Calypso card selection to the card selection
      * scenario.
      */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = cardExtension->createCardSelection();
+    std::shared_ptr<CalypsoCardSelection>  cardSelection = calypsoCardService->createCardSelection();
     cardSelection->acceptInvalidatedCard()
                   .filterByDfName(CalypsoConstants::AID);
     cardSelectionManager->prepareSelection(cardSelection);
@@ -162,8 +165,8 @@ int main()
 
     logger->info("= SmartCard = %\n", calypsoCard);
 
-    logger->info("Calypso Serial Number = %\n",
-                 HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+    const std::string csn = HexUtil::toHex(calypsoCard->getApplicationSerialNumber());
+    logger->info("Calypso Serial Number = %\n", csn);
 
     /*
      * Create security settings that reference the same SAM profile requested from the card resource
@@ -182,7 +185,7 @@ int main()
     //try {
         /* Performs file reads using the card transaction manager in secure mode */
         std::shared_ptr<CardTransactionManager> cardTransaction =
-            cardExtension->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
+            calypsoCardService->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
         cardTransaction->prepareReadRecords(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                             CalypsoConstants::RECORD_NUMBER_1,
                                             CalypsoConstants::RECORD_NUMBER_1,
@@ -200,8 +203,10 @@ int main()
 
     logger->info("The Secure Session ended successfully, the card is authenticated and the data " \
                  "read are certified\n");
+
+    const std::string sfiEnvHolder = HexUtil::toHex(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER);
     logger->info("File %h, rec 1: FILE_CONTENT = %\n",
-                 StringUtils::format("%02X", CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER),
+                 sfiEnvHolder,
                  calypsoCard->getFileBySfi(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER));
 
     logger->info("= #### End of the Calypso card processing\n");

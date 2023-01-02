@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -12,14 +12,11 @@
 
 #include "CardReaderObserver.h"
 
-/* Keyple Core Service */
-#include "ObservableReader.h"
-
 using namespace keyple::core::service;
 
-CardReaderObserver::CardReaderObserver(
-  std::shared_ptr<Reader> reader, std::shared_ptr<CardSelectionManager> cardSelectionManager)
-: mReader(reader), mCardSelectionManager(cardSelectionManager) {}
+CardReaderObserver::CardReaderObserver(std::shared_ptr<ObservableCardReader> observableCardReader,
+                                       std::shared_ptr<CardSelectionManager> cardSelectionManager)
+: mObservableCardReader(observableCardReader), mCardSelectionManager(cardSelectionManager) {}
 
 void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> event)
 {
@@ -57,12 +54,12 @@ void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> ev
         * Informs the underlying layer of the end of the card processing, in order to manage the
         * removal sequence.
         */
-        std::dynamic_pointer_cast<ObservableReader>(mReader)->finalizeCardProcessing();
+        mObservableCardReader->finalizeCardProcessing();
     }
 }
 
 void CardReaderObserver::onReaderObservationError(const std::string& pluginName,
-                                                  const std::string& readerName, 
+                                                  const std::string& readerName,
                                                   const std::shared_ptr<Exception> e)
 {
     mLogger->error("An exception occurred in plugin '%', reader '%'\n", pluginName, readerName, e);
