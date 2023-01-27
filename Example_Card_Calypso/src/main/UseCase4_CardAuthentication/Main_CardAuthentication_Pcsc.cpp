@@ -176,8 +176,7 @@ int main()
      * scenario.
      */
     std::shared_ptr<CalypsoCardSelection> cardSelection = calypsoCardService->createCardSelection();
-    cardSelection->acceptInvalidatedCard()
-                  .filterByDfName(CalypsoConstants::AID);
+    cardSelection->acceptInvalidatedCard().filterByDfName(CalypsoConstants::AID);
     cardSelectionManager->prepareSelection(cardSelection);
 
     /* Actual card communication: run the selection scenario */

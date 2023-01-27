@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -13,6 +13,7 @@
 #include "ConfigurationUtil.h"
 
 #include <regex>
+#include <sstream>
 
 /* Keyple Core Util */
 #include "IllegalStateException.h"
@@ -32,18 +33,21 @@ const std::string ConfigurationUtil::CONTACT_READER_NAME_REGEX =
 const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
     LoggerFactory::getLogger(typeid(ConfigurationUtil));
 
-const std::string& ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                                        const std::string& readerNameRegex)
+const std::string ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                                       const std::string& readerNameRegex)
 {
+    std::string name = "";
+    const std::regex nameRegex(readerNameRegex);
+
     for (const auto& readerName : plugin->getReaderNames()) {
-        if (std::regex_match(readerName, std::regex(readerNameRegex))) {
+        if (std::regex_match(readerName, nameRegex)) {
             mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), readerName);
-            return readerName;
+            name = readerName;
+            return name;
         }
     }
 
-    throw IllegalStateException("Reader " +
-                                readerNameRegex +
-                                " not found in plugin " +
-                                plugin->getName());
+    std::stringstream ss;
+    ss << "Reader '" << readerNameRegex << "' not found in plugin '" << plugin->getName() << "'";
+    throw IllegalStateException(ss.str());
 }

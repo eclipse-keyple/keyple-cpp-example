@@ -64,8 +64,8 @@ public:
      * @throws IllegalStateException If the reader is not found.
      * @since 2.0.0
      */
-    static const std::string& getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                                 const std::string& readerNameRegex);
+    static const std::string getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                               const std::string& readerNameRegex);
 
 private:
     /**

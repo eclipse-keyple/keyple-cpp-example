@@ -106,7 +106,7 @@ void PluginObserver::setupReader(std::shared_ptr<CardReader> cardReader)
                  .setIsoProtocol(PcscReader::IsoProtocol::T1)
                  .setSharingMode(PcscReader::SharingMode::SHARED);
       }
-    } catch (Exception e) {
+    } catch (const Exception& e) {
         mLogger->error("Exception raised while setting up the reader %\n",
                        cardReader->getName(),
                        e);

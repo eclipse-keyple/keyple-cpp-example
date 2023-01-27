@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -56,8 +56,8 @@ public:
      * @return The name of the found reader.
      * @throw IllegalStateException If the reader is not found.
      */
-    static const std::string& getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                                const std::string& readerNameRegex);
+    static const std::string getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                               const std::string& readerNameRegex);
     /**
      * Set up the CardResourceService to provide a Calypso SAM C1 resource when requested.
      *

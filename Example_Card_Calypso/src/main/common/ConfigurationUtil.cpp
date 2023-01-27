@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -13,6 +13,7 @@
 #include "ConfigurationUtil.h"
 
 #include <regex>
+#include <sstream>
 
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
@@ -81,15 +82,17 @@ const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
 
 ConfigurationUtil::ConfigurationUtil() {}
 
-const std::string& ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                                        const std::string& readerNameRegex)
+const std::string ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
+                                                       const std::string& readerNameRegex)
 {
+    std::string name = "";
     const std::regex nameRegex(readerNameRegex);
 
     for (const auto& readerName : plugin->getReaderNames()) {
         if (std::regex_match(readerName, nameRegex)) {
             mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), readerName);
-            return readerName;
+            name = readerName;
+            return name;
         }
     }
 
