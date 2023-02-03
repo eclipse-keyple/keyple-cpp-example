@@ -167,12 +167,12 @@ ADD_EXECUTABLE(${USECASE6_PCSC}
                ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE6}/Main_VerifyPin_Pcsc.cpp)
 TARGET_LINK_LIBRARIES(${USECASE6_PCSC} ${KEYPLE_CARD_LIB} ${KEYPLE_PCSC_LIB} ${KEYPLE_SERVICE_LIB} ${KEYPLE_UTIL_LIB} ${KEYPLE_CALYPSO_LIB} ${KEYPLE_RESOURCE_LIB} ${THREAD_LIB})
 
-SET(USECASE7 UseCase7_StoredValue_SimpleReload)
+SET(USECASE7 UseCase7_StoredValue_SimpleReloading)
 SET(USECASE7_PCSC ${USECASE7}_Pcsc)
 ADD_EXECUTABLE(${USECASE7_PCSC}
                ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/CalypsoConstants.cpp
                ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/ConfigurationUtil.cpp
-               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE7}/Main_StoredValue_SimpleReload_Pcsc.cpp)
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE7}/Main_StoredValue_SimpleReloading_Pcsc.cpp)
 TARGET_LINK_LIBRARIES(${USECASE7_PCSC} ${KEYPLE_CARD_LIB} ${KEYPLE_PCSC_LIB} ${KEYPLE_SERVICE_LIB} ${KEYPLE_UTIL_LIB} ${KEYPLE_CALYPSO_LIB} ${KEYPLE_RESOURCE_LIB} ${THREAD_LIB})
 
 SET(USECASE8 UseCase8_StoredValue_DebitInSession)
@@ -207,3 +207,19 @@ ADD_EXECUTABLE(${USECASE11_PCSC}
                ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/ConfigurationUtil.cpp
                ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE11}/Main_DataSigning_Pcsc.cpp)
 TARGET_LINK_LIBRARIES(${USECASE11_PCSC} ${KEYPLE_CARD_LIB} ${KEYPLE_PCSC_LIB} ${KEYPLE_SERVICE_LIB} ${KEYPLE_UTIL_LIB} ${KEYPLE_CALYPSO_LIB} ${KEYPLE_RESOURCE_LIB} ${THREAD_LIB})
+
+SET(USECASE12 UseCase12_PerformanceMeasurement_EmbeddedValidation)
+SET(USECASE12_PCSC ${USECASE12}_Pcsc)
+ADD_EXECUTABLE(${USECASE12_PCSC}
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/CalypsoConstants.cpp
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/ConfigurationUtil.cpp
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE12}/Main_PerformanceMeasurement_EmbeddedValidation_Pcsc.cpp)
+TARGET_LINK_LIBRARIES(${USECASE12_PCSC} ${KEYPLE_CARD_LIB} ${KEYPLE_PCSC_LIB} ${KEYPLE_SERVICE_LIB} ${KEYPLE_UTIL_LIB} ${KEYPLE_CALYPSO_LIB} ${KEYPLE_RESOURCE_LIB} ${THREAD_LIB})
+
+SET(USECASE13 UseCase13_PerformanceMeasurement_DistributedReloading)
+SET(USECASE13_PCSC ${USECASE13}_Pcsc)
+ADD_EXECUTABLE(${USECASE13_PCSC}
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/CalypsoConstants.cpp
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/ConfigurationUtil.cpp
+               ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE13}/Main_PerformanceMeasurement_DistributedReloading_Pcsc.cpp)
+TARGET_LINK_LIBRARIES(${USECASE13_PCSC} ${KEYPLE_CARD_LIB} ${KEYPLE_PCSC_LIB} ${KEYPLE_SERVICE_LIB} ${KEYPLE_UTIL_LIB} ${KEYPLE_CALYPSO_LIB} ${KEYPLE_RESOURCE_LIB} ${THREAD_LIB})

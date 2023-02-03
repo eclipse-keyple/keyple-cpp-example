@@ -174,12 +174,7 @@ static char getInput()
     std::cout << "    'q': quit" << std::endl;
     std::cout << "Select an option: " << std::endl;
 
-    char key = static_cast<char>(getchar());
-
-    /* Enter key */
-    getchar();
-
-    return key;
+    return static_cast<char>(getchar());
 }
 
 int main()

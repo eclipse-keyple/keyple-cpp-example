@@ -24,6 +24,7 @@ const uint8_t CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER = 0x07;
 const uint8_t CalypsoConstants::SFI_EVENT_LOG = 0x08;
 const uint8_t CalypsoConstants::SFI_CONTRACT_LIST = 0x1E;
 const uint8_t CalypsoConstants::SFI_CONTRACTS = 0x09;
+const uint8_t CalypsoConstants::SFI_COUNTERS = 0x19;
 const uint16_t CalypsoConstants::LID_DF_RT = 0x2000;
 const uint16_t CalypsoConstants::LID_EVENT_LOG = 0x2010;
 

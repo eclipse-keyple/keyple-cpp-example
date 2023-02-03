@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -78,9 +78,9 @@ using namespace keyple::plugin::pcsc;
  *
  * @since 2.0.0
  */
-class Main_StoredValue_SimpleReload_Pcsc {};
+class Main_StoredValue_SimpleReloading_Pcsc {};
 static const std::unique_ptr<Logger> logger =
-    LoggerFactory::getLogger(typeid(Main_StoredValue_SimpleReload_Pcsc));
+    LoggerFactory::getLogger(typeid(Main_StoredValue_SimpleReloading_Pcsc));
 
 int main()
 {
@@ -197,7 +197,7 @@ int main()
         logger->info(". Last Transaction Number = %\n", calypsoCard->getSvLastTNum());
         logger->info(". Debit log record = %\n", calypsoCard->getSvLoadLogRecord());
 
-        /* Reload with 2 units */
+        /* Reloading with 2 units */
         cardTransaction->prepareSvReload(2);
 
         /* Execute the command and close the communication after */

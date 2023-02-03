@@ -1,5 +1,5 @@
 # *************************************************************************************************
-# Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                         *
+# Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                         *
 #                                                                                                 *
 # See the NOTICE file(s) distributed with this work for additional information regarding          *
 # copyright ownership.                                                                            *
@@ -72,19 +72,13 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(USECASE1 UseCase1_CardResourceService)
-ADD_EXECUTABLE(${USECASE1}
+SET(USECASE1_STUB ${USECASE1}_Stub)
+ADD_EXECUTABLE(${USECASE1_STUB}
                ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE1}/Main_CardResourceService_Stub.cpp)
-TARGET_LINK_LIBRARIES(${USECASE1}
-
-                      ${KEYPLE_CARD_LIB}
-                      ${KEYPLE_STUB_LIB}
-                      ${KEYPLE_SERVICE_LIB}
-                      ${KEYPLE_RESOURCE_LIB}
-                      ${KEYPLE_UTIL_LIB}
-)
+TARGET_LINK_LIBRARIES(${USECASE1_STUB} ${KEYPLE_CARD_LIB} ${KEYPLE_STUB_LIB} ${KEYPLE_SERVICE_LIB} ${KEYPLE_RESOURCE_LIB} ${KEYPLE_UTIL_LIB})
 
 IF(APPLE)
-    TARGET_LINK_LIBRARIES(${USECASE1} pthread)
+    TARGET_LINK_LIBRARIES(${USECASE1_STUB} pthread)
 ELSEIF(UNIX)
-    TARGET_LINK_LIBRARIES(${USECASE1} pthread)
+    TARGET_LINK_LIBRARIES(${USECASE1_STUB} pthread)
 ENDIF(APPLE)

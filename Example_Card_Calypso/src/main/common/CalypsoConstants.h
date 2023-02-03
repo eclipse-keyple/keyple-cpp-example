@@ -49,6 +49,7 @@ public:
     static const uint8_t SFI_EVENT_LOG;
     static const uint8_t SFI_CONTRACT_LIST;
     static const uint8_t SFI_CONTRACTS;
+    static const uint8_t SFI_COUNTERS;
     static const uint16_t LID_DF_RT;
     static const uint16_t LID_EVENT_LOG;
 

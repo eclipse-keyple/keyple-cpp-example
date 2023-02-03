@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -146,18 +146,16 @@ int main()
         throw IllegalStateException("No card is present in the reader.");
     }
 
-    logger->info("= #### Select application with AID = '%'\n", CalypsoConstants::AID);
-
-    /* Get the core card selection manager */
-    std::shared_ptr<CardSelectionManager> cardSelectionManager =
+    /* Create a SAM selection manager. */
+    std::shared_ptr<CardSelectionManager> samSelectionManager =
         smartCardService->createCardSelectionManager();
 
     /* Create a SAM selection using the Calypso card extension. */
-    cardSelectionManager->prepareSelection(calypsoCardService->createSamSelection());
+    samSelectionManager->prepareSelection(calypsoCardService->createSamSelection());
 
     /* SAM communication: run the selection scenario. */
     std::shared_ptr<CardSelectionResult> samSelectionResult =
-        cardSelectionManager->processCardSelectionScenario(calypsoSamReader);
+        samSelectionManager->processCardSelectionScenario(calypsoSamReader);
 
     /* Check the selection result. */
     if (samSelectionResult->getActiveSmartCard() == nullptr) {
@@ -169,6 +167,12 @@ int main()
         std::dynamic_pointer_cast<CalypsoSam>(samSelectionResult->getActiveSmartCard());
 
     logger->info("= SmartCard = %\n", calypsoSam);
+
+    logger->info("= #### Select application with AID = '%'.\n", CalypsoConstants::AID);
+
+    /* Create a card selection manager. */
+    std::shared_ptr<CardSelectionManager> cardSelectionManager = 
+        smartCardService->createCardSelectionManager();
 
     /*
      * Create a card selection using the Calypso card extension.
