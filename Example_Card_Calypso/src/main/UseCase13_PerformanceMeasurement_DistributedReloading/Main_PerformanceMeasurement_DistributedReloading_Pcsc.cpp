@@ -60,7 +60,7 @@ using namespace keyple::core::util::cpp;
 using namespace keyple::plugin::pcsc;
 
 /**
- * Use Case Calypso 12 – Performance measurement: reloading (PC/SC)
+ * Use Case Calypso 12 ï¿½ Performance measurement: reloading (PC/SC)
  *
  * <p>This code is dedicated to performance measurement for a reloading type transaction.
  *
@@ -147,13 +147,13 @@ int main()
     selection->acceptInvalidatedCard()
         .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
         .filterByDfName(cardAid)
-        .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER, 
+        .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                            CalypsoConstants::RECORD_NUMBER_1)
         .prepareReadRecord(CalypsoConstants::SFI_CONTRACT_LIST, CalypsoConstants::RECORD_NUMBER_1);
     cardSelectionManager->prepareSelection(selection);
 
     /* Configure the card resource service for the targeted SAM. */
-    ConfigurationUtil::setupCardResourceService(plugin, 
+    ConfigurationUtil::setupCardResourceService(plugin,
                                                 samReaderRegex, CalypsoConstants::SAM_PROFILE_NAME);
 
     /*
@@ -173,7 +173,7 @@ int main()
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
     cardSecuritySetting->setControlSamResource(
-        samResource->getReader(), 
+        samResource->getReader(),
         std::dynamic_pointer_cast<CalypsoSam>(samResource->getSmartCard()));
 
     while (true) {
@@ -257,18 +257,18 @@ int main()
                                ->getData()
                                ->getContent(CalypsoConstants::RECORD_NUMBER_2);
 
-                const int counter1Value = 
-                    *(calypsoCard->getFileBySfi(CalypsoConstants::SFI_CONTRACT_LIST)
-                                 ->getData()
-                                 ->getContentAsCounterValue(1));
+                // const int counter1Value =
+                //     *(calypsoCard->getFileBySfi(CalypsoConstants::SFI_CONTRACT_LIST)
+                //                  ->getData()
+                //                  ->getContentAsCounterValue(1));
 
-                const int counter2Value =
-                    *(calypsoCard->getFileBySfi(CalypsoConstants::SFI_CONTRACT_LIST)
-                                 ->getData()
-                                 ->getContentAsCounterValue(2));
+                // const int counter2Value =
+                //     *(calypsoCard->getFileBySfi(CalypsoConstants::SFI_CONTRACT_LIST)
+                //                  ->getData()
+                //                  ->getContentAsCounterValue(2));
 
                 /*
-                 * TODO Place here the analysis of the context, the contract list, the contracts, 
+                 * TODO Place here the analysis of the context, the contract list, the contracts,
                  * the counters and the preparation of the card's content update
                  */
 
@@ -279,8 +279,8 @@ int main()
                                        .prepareUpdateRecord(CalypsoConstants::SFI_CONTRACTS,
                                                             CalypsoConstants::RECORD_NUMBER_1,
                                                             newContractRecord)
-                                       .prepareIncreaseCounter(CalypsoConstants::SFI_COUNTERS, 
-                                                               1, 
+                                       .prepareIncreaseCounter(CalypsoConstants::SFI_COUNTERS,
+                                                               1,
                                                                counterIncrement)
                                        .prepareReleaseCardChannel()
                                        .processClosing();
@@ -290,11 +290,11 @@ int main()
                              GREEN,
                              System::currentTimeMillis() - timeStamp,
                              RESET);
-            
+
             } catch (const Exception& e) {
-                logger->error("%Transaction failed with exception: %%\n", 
+                logger->error("%Transaction failed with exception: %%\n",
                               RED,
-                              e.getMessage(), 
+                              e.getMessage(),
                               RESET);
             }
         }

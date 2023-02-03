@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -123,10 +123,10 @@ int main()
     cardSelectionManager->prepareSelection(cardSelection);
 
     /* Schedule the selection scenario */
-    // cardSelectionManager->scheduleCardSelectionScenario(
-    //     std::dynamic_pointer_cast<ObservableReader>(reader),
-    //     ObservableCardReader::DetectionMode::REPEATING,
-    //     ObservableCardReader::NotificationMode::MATCHED_ONLY);
+    cardSelectionManager->scheduleCardSelectionScenario(
+        observableCardReader,
+        ObservableCardReader::DetectionMode::REPEATING,
+        ObservableCardReader::NotificationMode::MATCHED_ONLY);
 
     /* Create and add an observer */
     auto cardReaderObserver =

@@ -60,9 +60,9 @@ using namespace keyple::core::util::cpp;
 using namespace keyple::plugin::pcsc;
 
  /**
-  * Use Case Calypso 12 – Performance measurement: embedded validation (PC/SC)
+  * Use Case Calypso 12 ï¿½ Performance measurement: embedded validation (PC/SC)
   *
-  * <p>This code is dedicated to performance measurement for an embedded validation type 
+  * <p>This code is dedicated to performance measurement for an embedded validation type
   * transaction.
   *
   * <p>It implements the scenario described <a
@@ -72,7 +72,7 @@ using namespace keyple::plugin::pcsc;
   * <p>Any unexpected behavior will result in runtime exceptions.
   */
 class Main_PerformanceMeasurement_EmbeddedValidation_Pcsc {};
-const std::unique_ptr<Logger> logger = 
+const std::unique_ptr<Logger> logger =
     LoggerFactory::getLogger(typeid(Main_PerformanceMeasurement_EmbeddedValidation_Pcsc));
 
 /* User interface management */
@@ -82,14 +82,14 @@ static const std::string GREEN = "\u001B[32m";
 static const std::string YELLOW = "\u001B[33m";
 
 /* Operating parameters */
-static const std::string cardReaderRegex = 
+static const std::string cardReaderRegex =
     ".*ASK LoGO.*|.*Contactless.*|.*ACR122U.*|.*00 01.*|.*5x21-CL 0.*";
-static const std::string samReaderRegex = 
+static const std::string samReaderRegex =
     ".*Identive.*|.*HID.*|.*SAM.*|.*00 00.*|.*5x21 0.*";
 static const std::string cardAid = "315449432E49434131";
 static const int counterDecrement = 1;
 static const std::string logLevel = "INFO";
-static const std::vector<uint8_t> newEventRecord = 
+static const std::vector<uint8_t> newEventRecord =
     HexUtil::toByteArray("1122334455667788112233445566778811223344556677881122334455");
 
 int main()
@@ -107,11 +107,11 @@ int main()
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
     /* Register the PcscPlugin */
-    std::shared_ptr<Plugin> plugin = 
+    std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the contactless reader whose name matches the provided regexand configure it */
-    const std::string pcscContactlessReaderName = 
+    const std::string pcscContactlessReaderName =
         ConfigurationUtil::getCardReaderName(plugin, cardReaderRegex);
     std::shared_ptr<PcscReader> reader =
         std::dynamic_pointer_cast<PcscReader>(
@@ -122,36 +122,36 @@ int main()
     auto cardReader =
         std::dynamic_pointer_cast<ConfigurableCardReader>(
             plugin->getReader(pcscContactlessReaderName));
-    cardReader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(), 
+    cardReader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
                                  ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     /* Get the contact reader whose name matches the provided regexand configure it */
-    const std::string pcscContactReaderName = 
+    const std::string pcscContactReaderName =
         ConfigurationUtil::getCardReaderName(plugin, samReaderRegex);
     reader = std::dynamic_pointer_cast<PcscReader>(
         plugin->getReaderExtension(typeid(PcscReader), pcscContactReaderName));
     reader->setContactless(false)
            .setIsoProtocol(PcscReader::IsoProtocol::T0)
            .setSharingMode(PcscReader::SharingMode::SHARED);
-    auto samReader = 
+    auto samReader =
         std::dynamic_pointer_cast<ConfigurableCardReader>(plugin->getReader(pcscContactReaderName));
-    samReader->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(), 
+    samReader->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
                                 ConfigurationUtil::SAM_PROTOCOL);
 
     /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> calypsoCardService = 
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
         CalypsoExtensionService::getInstance();
 
     /* Verify that the extension's API level is consistent with the current service. */
     smartCardService->checkCardExtension(calypsoCardService);
 
     /* Create a SAM selection manager, use it to select the SAMand retrieve a CalypsoSam. */
-    std::shared_ptr<CardSelectionManager> samSelectionManager = 
+    std::shared_ptr<CardSelectionManager> samSelectionManager =
         smartCardService->createCardSelectionManager();
     samSelectionManager->prepareSelection(calypsoCardService->createSamSelection());
     std::shared_ptr<CardSelectionResult> samSelectionResult =
         samSelectionManager->processCardSelectionScenario(samReader);
-    auto calypsoSam = 
+    auto calypsoSam =
         std::dynamic_pointer_cast<CalypsoSam>(samSelectionResult->getActiveSmartCard());
 
     /* Check the selection result. */
@@ -161,7 +161,7 @@ int main()
     }
 
     /* Create a card selection manager. */
-    std::shared_ptr<CardSelectionManager> cardSelectionManager = 
+    std::shared_ptr<CardSelectionManager> cardSelectionManager =
         smartCardService->createCardSelectionManager();
 
     /*
@@ -203,14 +203,14 @@ int main()
                 /* Process the card selection scenario */
                 std::shared_ptr<CardSelectionResult> cardSelectionResult =
                     cardSelectionManager->processCardSelectionScenario(cardReader);
-                auto calypsoCard = 
+                auto calypsoCard =
                     std::dynamic_pointer_cast<CalypsoCard>(
                         cardSelectionResult->getActiveSmartCard());
                 if (calypsoCard == nullptr) {
                     throw IllegalStateException("Card selection failed!");
                 }
 
-                /* 
+                /*
                  * Create a transaction manager, open a Secure Session, read Environmentand Event
                  * Log.
                  */
@@ -218,9 +218,9 @@ int main()
                     CalypsoExtensionService::getInstance()
                         ->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
                 cardTransactionManager->prepareReadRecord(
-                                           CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER, 
+                                           CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
                                            CalypsoConstants::RECORD_NUMBER_1)
-                                       .prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG, 
+                                       .prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG,
                                                           CalypsoConstants::RECORD_NUMBER_1)
                                        .processOpening(WriteAccessLevel::DEBIT);
 
@@ -237,7 +237,7 @@ int main()
                 /* TODO Place here the analysis of the contextand the last event log */
 
                 /* Read the contract list */
-                cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACT_LIST, 
+                cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACT_LIST,
                                                           CalypsoConstants::RECORD_NUMBER_1)
                                        .processCommands();
 
@@ -249,7 +249,7 @@ int main()
                 /* TODO Place here the analysis of the contract list */
 
                 /* Read the elected contract */
-                cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACTS, 
+                cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACTS,
                                                           CalypsoConstants::RECORD_NUMBER_1)
                                        .processCommands();
 
@@ -264,10 +264,10 @@ int main()
                 cardTransactionManager->prepareReadCounter(CalypsoConstants::SFI_COUNTERS, 1)
                                        .processCommands();
 
-                const int counterValue = 
-                    *(calypsoCard->getFileBySfi(CalypsoConstants::SFI_CONTRACT_LIST)
-                                 ->getData()
-                                 ->getContentAsCounterValue(1));
+                // const int counterValue =
+                //     *(calypsoCard->getFileBySfi(CalypsoConstants::SFI_CONTRACT_LIST)
+                //                  ->getData()
+                //                  ->getContentAsCounterValue(1));
 
                 /* TODO Place here the preparation of the card's content update */
 
@@ -283,11 +283,11 @@ int main()
                              GREEN,
                              System::currentTimeMillis() - timeStamp,
                              RESET);
-            
+
             } catch (const Exception& e) {
                 logger->error("%Transaction failed with exception: %%\n",
-                              RED, 
-                              e.getMessage(), 
+                              RED,
+                              e.getMessage(),
                               RESET);
             }
         }
