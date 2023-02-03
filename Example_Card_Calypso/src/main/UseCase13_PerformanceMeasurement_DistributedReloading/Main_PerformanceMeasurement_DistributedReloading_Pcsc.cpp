@@ -92,46 +92,49 @@ static const std::vector<uint8_t> newContractListRecord =
     HexUtil::toByteArray("00112233445566778899AABBCCDDEEFF00112233445566778899AABBCC");
 static const std::vector<uint8_t> newContractRecord =
 HexUtil::toByteArray("AABBCCDDEEFFAABBCCDDEEFFAABBCCDDEEFFAABBCCDDEEFFAABBCCDDEE");
+static std::string builtDate = __DATE__;
+static std::string builtTime = __TIME__;
 
 int main()
 {
-     logger->info("=============== Performance measurement: validation transaction "\
-                  "============== = \n");
-     logger->info("Using parameters:\n");
-     logger->info("  CARD_READER_REGEX=%\n", cardReaderRegex);
-     logger->info("  SAM_READER_REGEX=%\n", samReaderRegex);
-     logger->info("  AID=%\n", cardAid);
-     logger->info("  Counter increment=%\n", counterIncrement);
-     logger->info("  log level=%\n", logLevel);
+    logger->info("%=============== Performance measurement: validation transaction "\
+                 "===============\n", GREEN);
+    logger->info("Using parameters:\n");
+    logger->info("  CARD_READER_REGEX=%\n", cardReaderRegex);
+    logger->info("  SAM_READER_REGEX=%\n", samReaderRegex);
+    logger->info("  AID=%\n", cardAid);
+    logger->info("  Counter increment=%\n", counterIncrement);
+    logger->info("  log level=%\n", logLevel);
+    logger->info("Build data: %s %s%s\n", builtDate, builtTime, RESET);
 
-     /* Get the main Keyple service */
-     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
+    /* Get the main Keyple service */
+    std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
-     /* Register the PcscPlugin */
-     std::shared_ptr<Plugin> plugin =
-         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
+    /* Register the PcscPlugin */
+    std::shared_ptr<Plugin> plugin =
+        smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
-     /* Get the contactless reader whose name matches the provided regexand configure it */
-     const std::string pcscContactlessReaderName =
-         ConfigurationUtil::getCardReaderName(plugin, cardReaderRegex);
-     std::shared_ptr<PcscReader> reader =
-         std::dynamic_pointer_cast<PcscReader>(
-             plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName));
-     reader->setContactless(true)
-         .setIsoProtocol(PcscReader::IsoProtocol::T1)
-         .setSharingMode(PcscReader::SharingMode::SHARED);
-     auto cardReader =
-         std::dynamic_pointer_cast<ConfigurableCardReader>(
-             plugin->getReader(pcscContactlessReaderName));
-     cardReader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-         ConfigurationUtil::ISO_CARD_PROTOCOL);
+    /* Get the contactless reader whose name matches the provided regexand configure it */
+    const std::string pcscContactlessReaderName =
+        ConfigurationUtil::getCardReaderName(plugin, cardReaderRegex);
+    std::shared_ptr<PcscReader> reader =
+        std::dynamic_pointer_cast<PcscReader>(
+            plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName));
+    reader->setContactless(true)
+        .setIsoProtocol(PcscReader::IsoProtocol::T1)
+        .setSharingMode(PcscReader::SharingMode::SHARED);
+    auto cardReader =
+        std::dynamic_pointer_cast<ConfigurableCardReader>(
+            plugin->getReader(pcscContactlessReaderName));
+    cardReader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        ConfigurationUtil::ISO_CARD_PROTOCOL);
 
-     /* Get the Calypso card extension service */
-     std::shared_ptr<CalypsoExtensionService> calypsoCardService =
-         CalypsoExtensionService::getInstance();
+    /* Get the Calypso card extension service */
+    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
+        CalypsoExtensionService::getInstance();
 
-     /* Verify that the extension's API level is consistent with the current service. */
-     smartCardService->checkCardExtension(calypsoCardService);
+    /* Verify that the extension's API level is consistent with the current service. */
+    smartCardService->checkCardExtension(calypsoCardService);
 
     /* Get the core card selection manager. */
     std::shared_ptr<CardSelectionManager> cardSelectionManager =

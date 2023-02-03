@@ -91,17 +91,20 @@ static const int counterDecrement = 1;
 static const std::string logLevel = "INFO";
 static const std::vector<uint8_t> newEventRecord =
     HexUtil::toByteArray("1122334455667788112233445566778811223344556677881122334455");
+static std::string builtDate = __DATE__;
+static std::string builtTime = __TIME__;
 
 int main()
 {
-    logger->info("=============== Performance measurement: validation transaction "\
-                 "============== = \n");
+    logger->info("%=============== Performance measurement: validation transaction "\
+                 "==============\n", GREEN);
     logger->info("Using parameters:\n");
     logger->info("  CARD_READER_REGEX=%\n", cardReaderRegex);
     logger->info("  SAM_READER_REGEX=%\n", samReaderRegex);
     logger->info("  AID=%\n", cardAid);
     logger->info("  Counter decrement=%\n", counterDecrement);
     logger->info("  log level=%\n", logLevel);
+    logger->info("Build data: %s %s%s\n", builtDate, builtTime, RESET);
 
     /* Get the main Keyple service */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
@@ -131,12 +134,10 @@ int main()
     reader = std::dynamic_pointer_cast<PcscReader>(
         plugin->getReaderExtension(typeid(PcscReader), pcscContactReaderName));
     reader->setContactless(false)
-           .setIsoProtocol(PcscReader::IsoProtocol::T0)
+           .setIsoProtocol(PcscReader::IsoProtocol::ANY)
            .setSharingMode(PcscReader::SharingMode::SHARED);
     auto samReader =
         std::dynamic_pointer_cast<ConfigurableCardReader>(plugin->getReader(pcscContactReaderName));
-    samReader->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
-                                ConfigurationUtil::SAM_PROTOCOL);
 
     /* Get the Calypso card extension service */
     std::shared_ptr<CalypsoExtensionService> calypsoCardService =
@@ -178,7 +179,8 @@ int main()
 
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
+    cardSecuritySetting->setControlSamResource(samReader, calypsoSam)
+                        .enableRatificationMechanism();
 
     while (true) {
         logger->info("%########################################################%\n", YELLOW, RESET);
@@ -290,6 +292,9 @@ int main()
                               e.getMessage(),
                               RESET);
             }
+
+        } else {
+            logger->info("%No card detected%\n", RED, RESET);
         }
     }
 
