@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -67,8 +67,6 @@ using namespace keyple::plugin::stub;
  * All results are logged with slf4j.
  *
  * <p>Any unexpected behavior will result in a runtime exceptions.
- *
- * @since 2.0.0
  */
 class Main_ExplicitSelectionAid_Stub {};
 static std::unique_ptr<Logger> logger =
@@ -78,7 +76,7 @@ static const std::string CARD_READER_NAME = "Stub card reader";
 
 int main()
 {
-    /* Get the instance of the SmartCardService (singleton pattern) */
+    /* Get the instance of the SmartCardService */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
     /*

@@ -30,6 +30,8 @@
 
 /* Keyple Plugin Pcsc */
 #include "PcscReader.h"
+#include "PcscSupportedContactProtocol.h"
+#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Service Resource */
 #include "CardResourceServiceProvider.h"
@@ -82,8 +84,8 @@ const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
 
 ConfigurationUtil::ConfigurationUtil() {}
 
-const std::string ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                                       const std::string& readerNameRegex)
+const std::string ConfigurationUtil::getReaderName(std::shared_ptr<Plugin> plugin,
+                                                   const std::string& readerNameRegex)
 {
     std::string name = "";
     const std::regex nameRegex(readerNameRegex);
@@ -99,6 +101,72 @@ const std::string ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> p
     std::stringstream ss;
     ss << "Reader '" << readerNameRegex << "' not found in plugin '" << plugin->getName() << "'";
     throw IllegalStateException(ss.str());
+}
+
+std::shared_ptr<CardReader> ConfigurationUtil::getCardReader(std::shared_ptr<Plugin> plugin,
+                                                             const std::string& readerNameRegex)
+{
+    /* Get the contactless reader whose name matches the provided regex */
+    const std::string pcscContactlessReaderName = getReaderName(plugin, readerNameRegex);
+    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
+
+    /* Configure the reader with parameters suitable for contactless operations. */
+    std::shared_ptr<PcscReader> reader =
+        std::dynamic_pointer_cast<PcscReader>(
+            plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName));
+    reader->setContactless(true)
+           .setIsoProtocol(PcscReader::IsoProtocol::T1)
+           .setSharingMode(PcscReader::SharingMode::SHARED);
+
+    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
+        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+                           ISO_CARD_PROTOCOL);
+
+    return cardReader;
+}
+
+std::shared_ptr<CardReader> ConfigurationUtil::getSamReader(std::shared_ptr<Plugin> plugin,
+                                                            const std::string& readerNameRegex)
+{
+    /* Get the contact reader dedicated for Calypso SAM whose name matches the provided regex */
+    const std::string pcscContactReaderName = getReaderName(plugin, readerNameRegex);
+    std::shared_ptr<CardReader> samReader = plugin->getReader(pcscContactReaderName);
+
+    /* Configure the Calypso SAM reader with parameters suitable for contactless operations. */
+    std::shared_ptr<PcscReader> reader =
+        std::dynamic_pointer_cast<PcscReader>(
+            plugin->getReaderExtension(typeid(PcscReader), pcscContactReaderName));
+    reader->setContactless(false)
+           .setIsoProtocol(PcscReader::IsoProtocol::ANY)
+           .setSharingMode(PcscReader::SharingMode::SHARED);
+
+    std::dynamic_pointer_cast<ConfigurableCardReader>(samReader)
+        ->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(), SAM_PROTOCOL);
+
+    return samReader;
+}
+
+std::shared_ptr<CalypsoSam> ConfigurationUtil::getSam(std::shared_ptr<CardReader> samReader)
+{
+    /* Create a SAM selection manager. */
+    std::shared_ptr<CardSelectionManager> samSelectionManager =
+        SmartCardServiceProvider::getService()->createCardSelectionManager();
+
+    /* Create a SAM selection using the Calypso card extension. */
+    samSelectionManager->prepareSelection(
+        CalypsoExtensionService::getInstance()->createSamSelection());
+
+    /* SAM communication: run the selection scenario. */
+    std::shared_ptr<CardSelectionResult> samSelectionResult =
+        samSelectionManager->processCardSelectionScenario(samReader);
+
+    /* Check the selection result. */
+    if (samSelectionResult->getActiveSmartCard() == nullptr) {
+        throw IllegalStateException("The selection of the SAM failed.");
+    }
+
+    /* Get the Calypso SAM SmartCard resulting of the selection. */
+    return std::dynamic_pointer_cast<CalypsoSam>(samSelectionResult->getActiveSmartCard());
 }
 
 void ConfigurationUtil::setupCardResourceService(std::shared_ptr<Plugin> plugin,

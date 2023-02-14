@@ -62,7 +62,6 @@ public:
      * @param readerNameRegex A regular expression matching the targeted reader.
      * @return The name of the found reader.
      * @throws IllegalStateException If the reader is not found.
-     * @since 2.0.0
      */
     static const std::string getCardReaderName(std::shared_ptr<Plugin> plugin,
                                                const std::string& readerNameRegex);

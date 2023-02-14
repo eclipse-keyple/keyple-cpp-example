@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -101,7 +101,7 @@ public:
     /** {@inheritDoc} */
     void setupReader(const std::shared_ptr<CardReader> reader) override
     {
-        /* Configure the reader with parameters suitable for contactless operations */
+        /* Configure the reader with parameters suitable for contact operations */
         try {
             std::dynamic_pointer_cast<ConfigurableCardReader>(reader)
                 ->activateProtocol(PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
@@ -172,13 +172,10 @@ static char getInput()
 
 int main()
 {
-    /* Get the instance of the SmartCardService (singleton pattern) */
+    /* Get the instance of the SmartCardService */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
-    /*
-     * Register the PcscPlugin with the SmartCardService, get the corresponding generic plugin in
-     * return.
-     */
+    /* Register the PcscPlugin, get the corresponding PC/SC plugin in return */
     std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 

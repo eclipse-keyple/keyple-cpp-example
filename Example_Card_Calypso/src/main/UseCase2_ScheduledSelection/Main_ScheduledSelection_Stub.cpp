@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -86,7 +86,7 @@ static const std::string CARD_READER_NAME = "Stub card reader";
 
 int main()
 {
-    /* Get the instance of the SmartCardService (singleton pattern) */
+    /* Get the instance of the SmartCardService */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
     /*

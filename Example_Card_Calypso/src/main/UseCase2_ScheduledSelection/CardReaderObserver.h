@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2021 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -37,8 +37,7 @@ public:
      * Constructor.
      *
      * <p>Note: the reader is provided here for convenience but could also be retrieved from the
-     * {@link SmartCardService} with its name and that of the plugin both present in the {@link
-     * CardReaderEvent}.
+     * SmartCardService with its name and that of the plugin both present in the CardReaderEvent.
      *
      * @param reader The card reader.
      * @param cardSelectionManager The card selection manager.
@@ -47,16 +46,12 @@ public:
                        std::shared_ptr<CardSelectionManager> cardSelectionManager);
 
     /**
-     * {@inheritDoc}
-     *
-     * @since 2.0.0
+     * {@inheritDoc} ConfigurationUtil.getSamReader(plugin, ConfigurationUtil.SAM_READER_NAME_REGEX)
      */
     void onReaderEvent(const std::shared_ptr<CardReaderEvent> event) override;
 
     /**
-     * {@inheritDoc}
-     *
-     * @since 2.0.0
+     * {@inheritDoc} ConfigurationUtil.getSamReader(plugin, ConfigurationUtil.SAM_READER_NAME_REGEX)
      */
     void onReaderObservationError(const std::string& pluginName,
                                   const std::string& readerName,

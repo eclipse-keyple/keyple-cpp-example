@@ -12,7 +12,6 @@
 
  /* Calypsonet Terminal Reader */
 #include "CardReader.h"
-#include "ConfigurableCardReader.h"
 
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
@@ -32,9 +31,6 @@
 #include "PcscPlugin.h"
 #include "PcscPluginFactory.h"
 #include "PcscPluginFactoryBuilder.h"
-#include "PcscReader.h"
-#include "PcscSupportedContactProtocol.h"
-#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Service Resource */
 #include "CardResourceProfileConfigurator.h"
@@ -114,20 +110,9 @@ int main()
     std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
-    /* Get the contactless reader whose name matches the provided regexand configure it */
-    const std::string pcscContactlessReaderName =
-        ConfigurationUtil::getCardReaderName(plugin, cardReaderRegex);
-    std::shared_ptr<PcscReader> reader =
-        std::dynamic_pointer_cast<PcscReader>(
-            plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName));
-    reader->setContactless(true)
-        .setIsoProtocol(PcscReader::IsoProtocol::T1)
-        .setSharingMode(PcscReader::SharingMode::SHARED);
-    auto cardReader =
-        std::dynamic_pointer_cast<ConfigurableCardReader>(
-            plugin->getReader(pcscContactlessReaderName));
-    cardReader->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-        ConfigurationUtil::ISO_CARD_PROTOCOL);
+    /* Get the card readers whose name matches the provided regex */
+    std::shared_ptr<CardReader> cardReader =
+        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
 
     /* Get the Calypso card extension service */
     std::shared_ptr<CalypsoExtensionService> calypsoCardService =

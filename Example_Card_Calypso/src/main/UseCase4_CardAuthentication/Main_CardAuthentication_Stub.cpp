@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -22,6 +22,10 @@
 #include "SmartCardService.h"
 #include "SmartCardServiceProvider.h"
 
+/* Keyple Core Service Resource */
+#include "CardResource.h"
+#include "CardResourceServiceProvider.h"
+
 /* Keyple Core Util */
 #include "ContactCardCommonProtocol.h"
 #include "ContactlessCardCommonProtocol.h"
@@ -41,10 +45,6 @@
 #include "ConfigurationUtil.h"
 #include "StubSmartCardFactory.h"
 
-/* Keyple Core Resource */
-#include "CardResource.h"
-#include "CardResourceServiceProvider.h"
-
 using namespace keyple::card::calypso;
 using namespace keyple::core::service;
 using namespace keyple::core::service::resource;
@@ -55,8 +55,6 @@ using namespace keyple::core::util::protocol;
 using namespace keyple::plugin::stub;
 
 /**
- *
- *
  * <h1>Use Case Calypso 4 – Calypso Card authentication (Stub)</h1>
  *
  * <p>We demonstrate here the authentication of a Calypso card using a Secure Session in which a
@@ -78,11 +76,7 @@ using namespace keyple::plugin::stub;
  *   <li>Read a file record in Secure Session.
  * </ul>
  *
- * All results are logged with slf4j.
- *
  * <p>Any unexpected behavior will result in runtime exceptions.
- *
- * @since 2.0.0
  */
 class Main_CardAuthentication_Stub {};
 static const std::unique_ptr<Logger> logger =
@@ -93,7 +87,7 @@ static const std::string SAM_READER_NAME = "Stub SAM reader";
 
 int main()
 {
-    /* Get the instance of the SmartCardService (singleton pattern) */
+    /* Get the instance of the SmartCardService */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
     /*

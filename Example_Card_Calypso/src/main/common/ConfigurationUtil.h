@@ -12,6 +12,9 @@
 
 #pragma once
 
+/* Calypsonet Terminal Calypso */
+#include "CalypsoSam.h"
+
 /* Calypsonet Terminal Reader */
 #include "CardReader.h"
 
@@ -25,6 +28,7 @@
 /* Keyple Service Resource */
 #include "ReaderConfiguratorSpi.h"
 
+using namespace calypsonet::terminal::calypso::sam;
 using namespace calypsonet::terminal::reader;
 using namespace keyple::core::service;
 using namespace keyple::core::service::resource::spi;
@@ -47,17 +51,42 @@ public:
     static const std::string ISO_CARD_PROTOCOL;
     static const std::string INNOVATRON_CARD_PROTOCOL;
 
+    static const std::string getReaderName(std::shared_ptr<Plugin> plugin,
+                                           const std::string& readerNameRegex);
+
     /**
-     * Retrieves the name of the first available reader in the provided plugin whose name matches
-     * the provided regular expression.
+     * Retrieves the contactless card reader the first available reader in the provided plugin whose
+     * name matches the provided regular expression.
      *
      * @param plugin The plugin to which the reader belongs.
      * @param readerNameRegex A regular expression matching the targeted reader.
-     * @return The name of the found reader.
+     * @return The found card reader.
      * @throw IllegalStateException If the reader is not found.
      */
-    static const std::string getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                               const std::string& readerNameRegex);
+    static std::shared_ptr<CardReader> getCardReader(std::shared_ptr<Plugin> plugin,
+                                                     const std::string& readerNameRegex);
+
+    /**
+     * Retrieves the contact SAM reader the first available reader in the provided plugin whose name
+     * matches the provided regular expression.
+     *
+     * @param plugin The plugin to which the reader belongs.
+     * @param readerNameRegex A regular expression matching the targeted reader.
+     * @return The found SAM reader.
+     * @throw IllegalStateException If the reader is not found.
+     */
+    static std::shared_ptr<CardReader> getSamReader(std::shared_ptr<Plugin> plugin,
+                                                    const std::string& readerNameRegex);
+
+    /**
+     * Attempts to select a SAM and return the {@link CalypsoSam} in case of success.
+     *
+     * @param samReader The reader in which the SAM is inserted
+     * @return A {@link CalypsoSam}.
+     * @throw IllegalStateException when the selection of the SAM failed.
+     */
+    static std::shared_ptr<CalypsoSam> getSam(std::shared_ptr<CardReader> samReader);
+
     /**
      * Set up the CardResourceService to provide a Calypso SAM C1 resource when requested.
      *

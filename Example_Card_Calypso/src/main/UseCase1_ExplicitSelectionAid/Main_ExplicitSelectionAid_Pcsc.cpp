@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -12,7 +12,6 @@
 
 /* Calypsonet Terminal Reader */
 #include "CardReader.h"
-#include "ConfigurableCardReader.h"
 
 /* Keyple Card Calypso */
 #include "CalypsoExtensionService.h"
@@ -34,7 +33,6 @@
 #include "PcscPluginFactory.h"
 #include "PcscPluginFactoryBuilder.h"
 #include "PcscReader.h"
-#include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Cpp Example */
 #include "CalypsoConstants.h"
@@ -65,11 +63,7 @@ using namespace keyple::plugin::pcsc;
  *   <li>Output the collected data (FCI, ATR and file record content).
  * </ul>
  *
- * All results are logged with slf4j.
- *
  * <p>Any unexpected behavior will result in a runtime exceptions.
- *
- * @since 2.0.0
  */
 class Main_ExplicitSelectionAid_Pcsc {};
 static std::unique_ptr<Logger> logger =
@@ -77,13 +71,10 @@ static std::unique_ptr<Logger> logger =
 
 int main()
 {
-    /* Get the instance of the SmartCardService (singleton pattern) */
+    /* Get the instance of the SmartCardService */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
-    /*
-     * Register the PcscPlugin with the SmartCardService, get the corresponding generic plugin in
-     * return.
-     */
+    /* Register the PcscPlugin, get the corresponding PC/SC plugin in return */
     std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
@@ -95,19 +86,8 @@ int main()
     smartCardService->checkCardExtension(calypsoCardService);
 
     /* Get the contactless reader whose name matches the provided regex */
-    const std::string pcscContactlessReaderName =
-        ConfigurationUtil::getCardReaderName(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
-    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
-
-    /* Configure the reader with parameters suitable for contactless operations. */
-    std::dynamic_pointer_cast<PcscReader>(
-        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
-            ->setContactless(true)
-             .setIsoProtocol(PcscReader::IsoProtocol::T1)
-             .setSharingMode(PcscReader::SharingMode::SHARED);
-    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
-        ->activateProtocol(PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
-                           ConfigurationUtil::ISO_CARD_PROTOCOL);
+    std::shared_ptr<CardReader> cardReader =
+        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
 
     logger->info("=============== " \
                  "UseCase Calypso #1: AID based explicit selection " \

@@ -1,5 +1,5 @@
 /**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
+ * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
  *                                                                                                *
  * See the NOTICE file(s) distributed with this work for additional information regarding         *
  * copyright ownership.                                                                           *
@@ -33,7 +33,6 @@
 #include "PcscPlugin.h"
 #include "PcscPluginFactory.h"
 #include "PcscPluginFactoryBuilder.h"
-#include "PcscReader.h"
 #include "PcscSupportedContactlessProtocol.h"
 
 /* Keyple Cpp Example */
@@ -70,11 +69,7 @@ using namespace keyple::plugin::pcsc;
  *       selection, within a card transaction [without security here]).
  * </ul>
  *
- * All results are logged with slf4j.
- *
  * <p>Any unexpected behavior will result in runtime exceptions.
- *
- * @since 2.0.0
  */
 class Main_Rev1Selection_Pcsc {};
 static const std::unique_ptr<Logger> logger =
@@ -82,27 +77,18 @@ static const std::unique_ptr<Logger> logger =
 
 int main()
 {
-    /* Get the instance of the SmartCardService (singleton pattern) */
+    /* Get the instance of the SmartCardService */
     std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
 
-    /*
-     * Register the PcscPlugin with the SmartCardService, get the corresponding generic plugin in
-     * return.
-     */
+    /* Register the PcscPlugin, get the corresponding generic plugin in return */
     std::shared_ptr<Plugin> plugin =
         smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
 
     /* Get the contactless reader whose name matches the provided regex */
-    const std::string pcscContactlessReaderName =
-        ConfigurationUtil::getCardReaderName(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
-    std::shared_ptr<CardReader> cardReader = plugin->getReader(pcscContactlessReaderName);
+    std::shared_ptr<CardReader> cardReader =
+        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
 
-    /* Configure the reader with parameters suitable for contactless operations. */
-    std::dynamic_pointer_cast<PcscReader>(
-        plugin->getReaderExtension(typeid(PcscReader), pcscContactlessReaderName))
-            ->setContactless(true)
-            .setIsoProtocol(PcscReader::IsoProtocol::T1)
-            .setSharingMode(PcscReader::SharingMode::SHARED);
+    /* Activate Innovatron protocol. */
     std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(PcscSupportedContactlessProtocol::INNOVATRON_B_PRIME_CARD.getName(),
                            ConfigurationUtil::INNOVATRON_CARD_PROTOCOL);
