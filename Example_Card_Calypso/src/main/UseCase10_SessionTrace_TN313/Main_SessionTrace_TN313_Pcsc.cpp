@@ -97,7 +97,7 @@ static void displayUsageAndExit()
               << "me (e.g. \"HID.*\")" << std::endl;
     std::cout << " -v, --verbose                  set the log level to TRACE" << std::endl;
     std::cout << "PC/SC protocol is set to `\"ANY\" ('*') for the SAM reader, \"T1\" ('T=1') for " \
-                 "the card reader.";
+                 "the card reader." << std::endl;
 
     exit(-1);
 }
@@ -187,10 +187,8 @@ int main(int argc, char **argv)
     smartCardService->checkCardExtension(calypsoCardService);
 
     /* Get the card and SAM readers whose name matches the provided regexs */
-    std::shared_ptr<CardReader> cardReader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
-    std::shared_ptr<CardReader> samReader =
-        ConfigurationUtil::getSamReader(plugin, ConfigurationUtil::SAM_READER_NAME_REGEX);
+    auto cardReader = ConfigurationUtil::getCardReader(plugin, cardReaderRegex);
+    auto samReader = ConfigurationUtil::getSamReader(plugin, samReaderRegex);
 
     /* Get the Calypso SAM SmartCard after selection. */
     std::shared_ptr<CalypsoSam> calypsoSam = ConfigurationUtil::getSam(samReader);
@@ -228,7 +226,10 @@ int main(int argc, char **argv)
     /* Create security settings that reference the SAM */
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
+    cardSecuritySetting->assignDefaultKif(WriteAccessLevel::PERSONALIZATION, 0x21)
+                        .assignDefaultKif(WriteAccessLevel::LOAD, 0x27)
+                        .assignDefaultKif(WriteAccessLevel::DEBIT, 0x30)
+                        .setControlSamResource(samReader, calypsoSam);
 
     /* Create and add a card observer for this reader */
     auto cardReaderObserver =
