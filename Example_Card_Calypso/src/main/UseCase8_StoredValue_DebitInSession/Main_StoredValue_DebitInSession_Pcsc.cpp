@@ -144,8 +144,8 @@ int main()
     /* Create security settings that reference the SAM */
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam)
-                        .enableSvLoadAndDebitLog();
+    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
+    cardSecuritySetting->enableSvLoadAndDebitLog();
 
     /* Performs file reads using the card transaction manager in non-secure mode. */
     std::shared_ptr<CardTransactionManager> cardTransaction =

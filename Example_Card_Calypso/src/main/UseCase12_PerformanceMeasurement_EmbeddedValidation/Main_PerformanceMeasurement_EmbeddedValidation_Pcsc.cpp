@@ -144,8 +144,8 @@ int main()
 
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam)
-                        .enableRatificationMechanism();
+    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
+    cardSecuritySetting->enableRatificationMechanism();
 
     while (true) {
         logger->info("%########################################################%\n", YELLOW, RESET);

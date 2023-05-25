@@ -155,8 +155,8 @@ int main()
     /* Create security settings that reference the SAM */
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam)
-                        .setPinVerificationCipheringKey(
+    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
+    cardSecuritySetting->setPinVerificationCipheringKey(
                             CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KIF,
                             CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC);
 
