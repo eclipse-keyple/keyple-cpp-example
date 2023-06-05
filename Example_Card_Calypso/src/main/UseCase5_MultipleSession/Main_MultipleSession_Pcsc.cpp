@@ -148,8 +148,8 @@ int main()
     /* Create security settings that reference the SAM */
     std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
         CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam)
-                        .enableMultipleSession();
+    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
+    cardSecuritySetting->enableMultipleSession();
 
     /* Performs file reads using the card transaction manager in non-secure mode. */
     std::shared_ptr<CardTransactionManager> cardTransaction =
