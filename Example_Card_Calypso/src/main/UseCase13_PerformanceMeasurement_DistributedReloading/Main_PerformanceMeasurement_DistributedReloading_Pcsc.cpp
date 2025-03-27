@@ -136,8 +136,9 @@ int main()
         .filterByCardProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL)
         .filterByDfName(cardAid)
         .prepareReadRecord(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
-                           CalypsoConstants::RECORD_NUMBER_1)
-        .prepareReadRecord(CalypsoConstants::SFI_CONTRACT_LIST, CalypsoConstants::RECORD_NUMBER_1);
+                            CalypsoConstants::RECORD_NUMBER_1)
+        .prepareReadRecord(CalypsoConstants::SFI_CONTRACT_LIST,
+                            CalypsoConstants::RECORD_NUMBER_1);
     cardSelectionManager->prepareSelection(selection);
 
     /* Configure the card resource service for the targeted SAM. */
@@ -213,16 +214,18 @@ int main()
                 std::shared_ptr<CardTransactionManager> cardTransactionManager =
                     CalypsoExtensionService::getInstance()
                     ->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-                cardTransactionManager->prepareReadRecord(
-                    CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER, CalypsoConstants::RECORD_NUMBER_1)
-                                       .prepareReadRecord(
-                                           CalypsoConstants::SFI_CONTRACT_LIST,
-                                           CalypsoConstants::RECORD_NUMBER_1)
-                                       .prepareReadRecords(
-                                           CalypsoConstants::SFI_CONTRACTS,
-                                           CalypsoConstants::RECORD_NUMBER_1,
-                                           CalypsoConstants::RECORD_NUMBER_2,
-                                           CalypsoConstants::RECORD_SIZE)
+                cardTransactionManager->prepareReadRecords(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_SIZE)
+                                       .prepareReadRecords(CalypsoConstants::SFI_CONTRACT_LIST,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_SIZE)
+                                       .prepareReadRecords(CalypsoConstants::SFI_CONTRACTS,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_2,
+                                                           CalypsoConstants::RECORD_SIZE)
                                        .prepareReadCounter(CalypsoConstants::SFI_COUNTERS, 2)
                                        .processOpening(WriteAccessLevel::LOAD);
 
