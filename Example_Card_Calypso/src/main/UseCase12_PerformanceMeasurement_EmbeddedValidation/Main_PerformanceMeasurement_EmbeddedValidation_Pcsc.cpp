@@ -184,11 +184,14 @@ int main()
                 std::shared_ptr<CardTransactionManager> cardTransactionManager =
                     CalypsoExtensionService::getInstance()
                         ->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting);
-                cardTransactionManager->prepareReadRecord(
-                                           CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
-                                           CalypsoConstants::RECORD_NUMBER_1)
-                                       .prepareReadRecord(CalypsoConstants::SFI_EVENT_LOG,
-                                                          CalypsoConstants::RECORD_NUMBER_1)
+                cardTransactionManager->prepareReadRecords(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_SIZE)
+                                       .prepareReadRecords(CalypsoConstants::SFI_EVENT_LOG,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_SIZE)
                                        .processOpening(WriteAccessLevel::DEBIT);
 
                 const std::vector<uint8_t> environmentAndHolderData =
@@ -204,8 +207,10 @@ int main()
                 /* TODO Place here the analysis of the contextand the last event log */
 
                 /* Read the contract list */
-                cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACT_LIST,
-                                                          CalypsoConstants::RECORD_NUMBER_1)
+                cardTransactionManager->prepareReadRecords(CalypsoConstants::SFI_CONTRACT_LIST,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_SIZE)
                                        .processCommands();
 
                 const std::vector<uint8_t> contractListData =
@@ -216,8 +221,10 @@ int main()
                 /* TODO Place here the analysis of the contract list */
 
                 /* Read the elected contract */
-                cardTransactionManager->prepareReadRecord(CalypsoConstants::SFI_CONTRACTS,
-                                                          CalypsoConstants::RECORD_NUMBER_1)
+                cardTransactionManager->prepareReadRecords(CalypsoConstants::SFI_CONTRACTS,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_NUMBER_1,
+                                                           CalypsoConstants::RECORD_SIZE)
                                        .processCommands();
 
                 const std::vector<uint8_t> contractData =
