@@ -1,27 +1,31 @@
-# *************************************************************************************************
-# Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                         *
-#                                                                                                 *
-# See the NOTICE file(s) distributed with this work for additional information regarding          *
-# copyright ownership.                                                                            *
-#                                                                                                 *
-# This program and the accompanying materials are made available under the terms of the Eclipse   *
-# Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                   *
-#                                                                                                 *
-# SPDX-License-Identifier: EPL-2.0                                                                *
-# *************************************************************************************************/
+# *****************************************************************************
+# Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/     *
+#                                                                             *
+# See the NOTICE file(s) distributed with this work for additional            *
+# information regarding copyright ownership.                                  *
+#                                                                             *
+# This program and the accompanying materials are made available under the    *
+# terms of the Eclipse                                                        *
+#                                                                             *
+# Public License 2.0 which is available at                                    *
+# http://www.eclipse.org/legal/epl-2.0                                        *
+#                                                                             *
+# SPDX-License-Identifier: EPL-2.0                                            *
+# *****************************************************************************/
 
-PROJECT(KeypleCppExample C CXX)
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.24)
 
-SET(CMAKE_PROJECT_VERSION_MAJOR "2022")
-SET(CMAKE_PROJECT_VERSION_MINOR "11")
-SET(CMAKE_PROJECT_VERSION_PATCH "17")
-SET(CMAKE_PROJECT_VERSION_TWEAK "2")
+PROJECT(KeypleCppExample
+        VERSION 2024.04.18
+        LANGUAGES C CXX)
+
+SET(CMAKE_PROJECT_VERSION_MAJOR "2024")
+SET(CMAKE_PROJECT_VERSION_MINOR "04")
+SET(CMAKE_PROJECT_VERSION_PATCH "18")
 
 SET(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.
                            ${CMAKE_PROJECT_VERSION_MINOR}.
-                           ${CMAKE_PROJECT_VERSION_PATCH}.
-                           ${CMAKE_PROJECT_VERSION_TWEAK}")
+                           ${CMAKE_PROJECT_VERSION_PATCH}")
 
 SET(PACKAGE_NAME "KeypleCppExample")
 SET(PACKAGE_VERSION ${CMAKE_PROJECT_VERSION})
@@ -42,21 +46,19 @@ ENDIF()
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Include deps
+INCLUDE("CMakeLists.txt.keyple-card-generic")
+INCLUDE("CMakeLists.txt.keyple-common")
+INCLUDE("CMakeLists.txt.keyple-plugin")
+INCLUDE("CMakeLists.txt.keyple-plugin-stub")
+INCLUDE("CMakeLists.txt.keyple-plugin-pcsc")
+INCLUDE("CMakeLists.txt.keyple-service")
+INCLUDE("CMakeLists.txt.keyple-util")
+INCLUDE("CMakeLists.txt.keypop-card")
+INCLUDE("CMakeLists.txt.keypop-reader")
+
 # Add projects
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Card_Calypso)
+# ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Card_Calypso)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Plugin_PCSC)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Service)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/Example_Service_Resource)
-
-# Dependencies (for later use):
-#
-# calypsonet-terminal-reader-cpp-api:1.1.+
-# calypsonet-terminal-calypso-cpp-api:1.4.+
-#
-# keyple-common-cpp-api:2.0.+
-# keyple-service-cpp-lib:2.1.1
-# keyple-service-resource-cpp-lib:2.0.2
-# keyple-plugin-pcsc-cpp-lib:2.1.0
-# keyple-plugin-stub-cpp-lib:2.1.0
-# keyple-card-calypso-cpp-lib:2.2.5
-# keyple-util-cpp-lib:2.+

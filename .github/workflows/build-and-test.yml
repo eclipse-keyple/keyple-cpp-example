@@ -1,0 +1,50 @@
+name: Build and test code
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        env:
+          - toolchain: "toolchain/gcc-linux.cmake"
+            runner: ubuntu-latest
+            generator: ""
+          - toolchain: "toolchain/clang-macos.cmake"
+            runner: macos-latest
+            generator: ""
+          - toolchain: "\"toolchain/clang-windows.cmake\""
+            runner: windows-latest
+            generator: "-G \"Visual Studio 17 2022\""
+
+    runs-on: ${{ matrix.env.runner }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux reqs
+        if: ${{ matrix.env.runner == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake cppcheck clang-format clang-tidy gcc pre-commit
+
+      - name: Install macOS reqs
+        if: ${{ matrix.env.runner == 'macos-latest' }}
+        run: |
+          brew install llvm cmake cppcheck clang-format gcc pre-commit
+
+      - name: Build
+        run: |
+          cmake ${{ matrix.env.generator }} -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ matrix.env.toolchain }}
+          cmake --build build -j8
+
+      - name: Run Linux/macOS tests
+        if: ${{ matrix.env.runner == 'ubuntu-latest' || matrix.env.runner == 'macos-latest' }}
+        run: |
+          ./build/bin/keypopcalypsocryptolegacysam_ut
