@@ -1,0 +1,47 @@
+#**************************************************************************************************
+#* Copyright (c) 2024 Calypso Networks Association https://calypsonet.org/                        *
+#*                                                                                                *
+#* This program and the accompanying materials are made available under the                       *
+#* terms of the MIT License which is available at https://opensource.org/licenses/MIT.            *
+#*                                                                                                *
+#* SPDX-License-Identifier: MIT                                                                   *
+#**************************************************************************************************/
+
+fail_fast: false
+
+repos:
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: master
+    hooks:
+      - id: clang-tidy
+        name: clang-tidy
+        entry: clang-tidy -p=build
+                          --system-headers
+                          --fix-errors
+
+      # Code formatting (see .clang-format for config used).
+      - id: clang-format
+        name: clang-format
+        args: [-i]
+
+      # Static code analysis (for C++ files).
+      - id: cppcheck
+        name: cppcheck
+        args: [--enable=all,
+               --error-exitcode=1,
+               --language=c++,
+               --suppressions-list=./.cppcheck.suppress]
+        files: \.(cpp|hpp)$
+
+      # Coding style analysis. Based on Google C++ code style.
+      # cpplint configuration can be found in CPPLINT.cfg.
+      - id: cpplint

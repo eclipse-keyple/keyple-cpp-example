@@ -1,0 +1,40 @@
+# *****************************************************************************
+# Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/     *
+#                                                                             *
+# This program and the accompanying materials are made available under the    *
+# terms of the MIT License which is available at                              *
+# https://opensource.org/licenses/MIT.                                        *
+#                                                                             *
+# SPDX-License-Identifier: MIT                                                *
+# *****************************************************************************/
+
+# FetchContent added in CMake 3.11, downloads during the configure step
+# FetchContent_MakeAvailable was added in CMake 3.14; simpler usage
+INCLUDE(FetchContent)
+
+IF(NOT EXISTS "${CMAKE_BINARY_DIR}/_deps/keyplecardcalypsocpplib-src")
+
+    MESSAGE("-- > Fetching keyple card calypso from keyple cpp example")
+
+    # Checkout Keyple Card Calypso Cpp Lib dependency
+    FetchContent_Declare(
+
+        KeypleCardCalypsoCppLib
+
+        DOWNLOAD_EXTRACT_TIMESTAMP true
+        GIT_REPOSITORY https://github.com/eclipse-keyple/keyple-card-calypso-cpp-lib
+        GIT_TAG develop-3.2.2
+    )
+
+ELSE()
+
+    FetchContent_Declare(
+
+        KeypleCardCalypsoCppLib
+
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/keyplecardcalypsocpplib-src
+    )
+
+ENDIF()
+
+FetchContent_MakeAvailable(KeypleCardCalypsoCppLib)
