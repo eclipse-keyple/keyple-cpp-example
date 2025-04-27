@@ -1,0 +1,4 @@
+cstyleCast
+missingInclude
+unusedStructMember
+throwInEntryPoint

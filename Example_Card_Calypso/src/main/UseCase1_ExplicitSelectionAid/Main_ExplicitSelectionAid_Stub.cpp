@@ -1,158 +1,223 @@
-/**************************************************************************************************
- * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/* ****************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Distribution License 1.0 which is available at        *
+ * https://www.eclipse.org/org/documents/edl-v10.php                          *
+ *                                                                            *
+ * SPDX-License-Identifier: BSD-3-Clause                                      *
+ ******************************************************************************/
 
-/* Calypsonet Terminal Reader */
-#include "CardReader.h"
-#include "ConfigurableCardReader.h"
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
-/* Keyple Card Calypso */
-#include "CalypsoExtensionService.h"
+#include "keyple/card/calypso/CalypsoExtensionService.hpp"
+#include "keyple/core/service/Plugin.hpp"
+#include "keyple/core/service/SmartCardService.hpp"
+#include "keyple/core/service/SmartCardServiceProvider.hpp"
+#include "keyple/core/util/HexUtil.hpp"
+#include "keyple/core/util/cpp/Logger.hpp"
+#include "keyple/core/util/cpp/LoggerFactory.hpp"
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/stub/StubPluginFactoryBuilder.hpp"
+#include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
+#include "keypop/calypso/card/card/CalypsoCard.hpp"
+#include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
+#include "keypop/reader/CardReader.hpp"
+#include "keypop/reader/ReaderApiFactory.hpp"
+#include "keypop/reader/selection/CardSelectionManager.hpp"
+#include "keypop/reader/selection/CardSelectionResult.hpp"
+#include "keypop/reader/selection/IsoCardSelector.hpp"
+#include "keypop/reader/selection/spi/SmartCard.hpp"
 
-/* Keyple Core Service */
-#include "ConfigurableReader.h"
-#include "SmartCardService.h"
-#include "SmartCardServiceProvider.h"
+#include "../common/StubSmartCardFactory.hpp"
 
-/* Keyple Core Util */
-#include "HexUtil.h"
-#include "ContactCardCommonProtocol.h"
-#include "IllegalStateException.h"
-#include "LoggerFactory.h"
-#include "StringUtils.h"
-
-/* Keyple Plugin Stub */
-#include "StubPlugin.h"
-#include "StubPluginFactoryBuilder.h"
-#include "StubReader.h"
-
-/* Keyple Cpp Example */
-#include "CalypsoConstants.h"
-#include "ConfigurationUtil.h"
-#include "StubSmartCardFactory.h"
-
-using namespace calypsonet::terminal::reader;
-using namespace keyple::card::calypso;
-using namespace keyple::core::service;
-using namespace keyple::core::util;
-using namespace keyple::core::util::cpp;
-using namespace keyple::core::util::cpp::exception;
-using namespace keyple::core::util::protocol;
-using namespace keyple::plugin::stub;
+using keyple::card::calypso::CalypsoExtensionService;
+using keyple::core::service::Plugin;
+using keyple::core::service::SmartCardService;
+using keyple::core::service::SmartCardServiceProvider;
+using keyple::core::util::HexUtil;
+using keyple::core::util::cpp::Logger;
+using keyple::core::util::cpp::LoggerFactory;
+using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::stub::StubPluginFactoryBuilder;
+using keypop::calypso::card::CalypsoCardApiFactory;
+using keypop::calypso::card::card::CalypsoCard;
+using keypop::calypso::card::card::CalypsoCardSelectionExtension;
+using keypop::reader::CardReader;
+using keypop::reader::ReaderApiFactory;
+using keypop::reader::selection::CardSelectionManager;
+using keypop::reader::selection::CardSelectionResult;
+using keypop::reader::selection::IsoCardSelector;
+using keypop::reader::selection::spi::SmartCard;
 
 /**
- * <h1>Use Case Calypso 1 – Explicit Selection Aid (Stub)</h1>
+ * Handles the process of explicit selection of a Calypso card using the Stub
+ * plugin, without implementing the observation of the reader. Ensure the
+ * Calypso card is inserted before launching the program.
  *
- * <p>We demonstrate here the direct selection of a Calypso card inserted in a reader. No
- * observation of the reader is implemented in this example, so the card must be present in the
- * reader before the program is launched.
+ * <p>This class demonstrates the explicit selection of a Calypso card,
+ * including the initialization of the card selection manager after verifying
+ * the presence of an ISO 14443-4 card in the reader, and the attempt to select
+ * the specified Calypso card characterized by its AID.
  *
- * <h2>Scenario:</h2>
+ * <p>It also demonstrates how to retrieve and output collected data such as
+ * serial number and file record content after the selection scenario based on
+ * AID.
+ *
+ * <h2>Key Functionalities</h2>
  *
  * <ul>
- *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
- *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
- *       an AID-based application selection scenario, including reading a file record.
- *   <li>Output the collected data (FCI, ATR and file record content).
+ *   <li>Check for an ISO 14443-4 card in the reader and enable the card
+ *       selection manager.
+ *   <li>Attempt to select a specified Calypso card using AID-based application
+ *       selection scenario.
+ *   <li>Read and output the collected data including Calypso serial number and
+ *       file record content.
  * </ul>
- *
- * All results are logged with slf4j.
- *
- * <p>Any unexpected behavior will result in a runtime exceptions.
  */
-class Main_ExplicitSelectionAid_Stub {};
-static std::unique_ptr<Logger> logger =
-    LoggerFactory::getLogger(typeid(Main_ExplicitSelectionAid_Stub));
+class Main_ExplicitSelectionAid_Stub { };
+static std::unique_ptr<Logger> logger
+    = LoggerFactory::getLogger(typeid(Main_ExplicitSelectionAid_Stub));
 
 static const std::string CARD_READER_NAME = "Stub card reader";
 
-int main()
-{
-    /* Get the instance of the SmartCardService */
-    std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
+/** AID: Keyple test kit profile 1, Application 2 */
+static const std::string AID = "315449432E49434131";
+
+/* File identifiers */
+static const std::uint8_t SFI_ENVIRONMENT_AND_HOLDER = 0x07;
+
+/* The plugin used to manage the reader. */
+static std::shared_ptr<Plugin> plugin;
+/* The reader used to communicateate with the card. */
+static std::shared_ptr<CardReader> cardReader;
+/* The factory used to create the selection manager and card selectors. */
+static std::shared_ptr<ReaderApiFactory> readerApiFactory;
+/*
+ * The Calypso factory used to create the selection extension and transaction
+ * managers.
+ */
+static std::shared_ptr<CalypsoCardApiFactory> calypsoCardApiFactory;
+
+/**
+ * Initializes the Keyple service.
+ *
+ * <p>Gets an instance of the smart card service, registers the Stub plugin, and
+ * prepares the
+ * reader API factory for use.
+ *
+ * <p>Retrieves the {@link ReaderApiFactory}.
+ */
+static void
+initKeypleService() {
+    std::shared_ptr<SmartCardService> smartCardService(
+        SmartCardServiceProvider::getService());
 
     /*
-     * Register the StubPlugin with the SmartCardService, plug a Calypso card stub
-     * get the corresponding generic plugin in return.
+     * Register the StubPlugin with the SmartCardService and plug in stubs for a
+     * Calypso card.
      */
-    std::shared_ptr<StubPluginFactory> pluginFactory =
+    plugin = smartCardService->registerPlugin(
         StubPluginFactoryBuilder::builder()
-            ->withStubReader(CARD_READER_NAME, true, StubSmartCardFactory::getStubCard())
-            .build();
-    std::shared_ptr<Plugin> plugin = smartCardService->registerPlugin(pluginFactory);
+            ->withStubReader(
+                CARD_READER_NAME, true, StubSmartCardFactory::getStubCard())
+            .build());
+    readerApiFactory = smartCardService->getReaderApiFactory();
+}
 
-    std::shared_ptr<CardReader> cardReader = plugin->getReader(CARD_READER_NAME);
+/**
+ * Initializes the card reader with specific configurations.
+ *
+ * <p>Prepares the card reader using a predefined set of configurations,
+ * including the card reader name regex, ISO protocol, and sharing mode.
+ */
+static void
+initCardReader() {
+    cardReader = plugin->getReader(CARD_READER_NAME);
+}
 
-    std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
-        ->activateProtocol(ConfigurationUtil::ISO_CARD_PROTOCOL,
-                           ConfigurationUtil::ISO_CARD_PROTOCOL);
+/**
+ * Initializes the Calypso card extension service.
+ *
+ * <p>Retrieves the {@link CalypsoCardApiFactory}.
+ */
+static void
+initCalypsoCardExtensionService() {
+    std::shared_ptr<CalypsoExtensionService> calypsoExtensionService(
+        CalypsoExtensionService::getInstance());
+    SmartCardServiceProvider::getService()->checkCardExtension(
+        calypsoExtensionService);
+    calypsoCardApiFactory = calypsoExtensionService->getCalypsoCardApiFactory();
+}
 
-    /* Get the Calypso card extension service */
-    auto calypsoCardService = CalypsoExtensionService::getInstance();
+int
+main() {
+    logger->info(
+        "= UseCase Calypso #1: AID based explicit selection "
+        "==================\n");
 
-    /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(calypsoCardService);
+    /* Initialize the context */
+    initKeypleService();
+    initCardReader();
+    initCalypsoCardExtensionService();
 
-    logger->info("=============== " \
-                 "UseCase Calypso #1: AID based explicit selection " \
-                 "==================\n");
+    logger->info(
+        "=============== "
+        "UseCase Calypso #1: AID based explicit selection "
+        "==================\n");
 
     /* Check if a card is present in the reader */
     if (!cardReader->isCardPresent()) {
         throw IllegalStateException("No card is present in the reader.");
     }
 
-    logger->info("= #### Select application with AID = '%'\n", CalypsoConstants::AID);
+    logger->info("= #### Select application with AID = '%'\n", AID);
 
-    /* Get the core card selection manager */
-    std::shared_ptr<CardSelectionManager> cardSelectionManager =
-        smartCardService->createCardSelectionManager();
-
-    /*
-     * Create a card selection using the Calypso card extension.
-     * Prepare the selection by adding the created Calypso card selection to the card selection
-     * scenario.
-     */
-    std::shared_ptr<CalypsoCardSelection>  cardSelection = calypsoCardService->createCardSelection();
-    cardSelection->filterByDfName(CalypsoConstants::AID)
-                  .acceptInvalidatedCard()
-                  .prepareReadRecord(
-                      CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
-                      CalypsoConstants::RECORD_NUMBER_1);
-    cardSelectionManager->prepareSelection(cardSelection);
+    std::shared_ptr<CardSelectionManager> cardSelectionManager(
+        readerApiFactory->createCardSelectionManager());
+    std::shared_ptr<IsoCardSelector> cardSelector(
+        readerApiFactory->createIsoCardSelector());
+    cardSelector->filterByDfName(AID);
+    std::unique_ptr<CalypsoCardSelectionExtension>
+        calypsoCardSelectionExtension(
+            calypsoCardApiFactory->createCalypsoCardSelectionExtension());
+    calypsoCardSelectionExtension->acceptInvalidatedCard().prepareReadRecord(
+        SFI_ENVIRONMENT_AND_HOLDER, 1);
+    cardSelectionManager->prepareSelection(
+        cardSelector, std::move(calypsoCardSelectionExtension));
 
     /* Actual card communication: run the selection scenario */
-    const std::shared_ptr<CardSelectionResult> selectionResult =
-        cardSelectionManager->processCardSelectionScenario(cardReader);
+    const std::shared_ptr<CardSelectionResult> selectionResult
+        = cardSelectionManager->processCardSelectionScenario(cardReader);
 
     /* Check the selection result */
     if (selectionResult->getActiveSmartCard() == nullptr) {
-        throw IllegalStateException("The selection of the application '" +
-                                    CalypsoConstants::AID +
-                                    "' failed.");
+        throw IllegalStateException(
+            "The selection of the application '" + AID + "' failed.");
     }
 
     /* Get the SmartCard resulting of the selection */
-    const std::shared_ptr<SmartCard> card = selectionResult->getActiveSmartCard();
+    const std::shared_ptr<SmartCard> card(
+        selectionResult->getActiveSmartCard());
     auto calypsoCard = std::dynamic_pointer_cast<CalypsoCard>(card);
 
     logger->info("= SmartCard = %\n", calypsoCard);
 
-    const std::string csn = HexUtil::toHex(calypsoCard->getApplicationSerialNumber());
+    const std::string csn(
+        HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
     logger->info("Calypso Serial Number = %\n", csn);
 
-    const std::string sfiEnvHolder = HexUtil::toHex(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER);
-    logger->info("File SFI %h, rec 1: FILE_CONTENT = %\n",
-                 sfiEnvHolder,
-                 calypsoCard->getFileBySfi(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER));
+    const std::string sfiEnvHolder(HexUtil::toHex(SFI_ENVIRONMENT_AND_HOLDER));
+    logger->info(
+        "File SFI %h, rec 1: FILE_CONTENT = %\n",
+        sfiEnvHolder,
+        calypsoCard->getFileBySfi(SFI_ENVIRONMENT_AND_HOLDER));
 
     logger->info("= #### End of the Calypso card processing\n");
 

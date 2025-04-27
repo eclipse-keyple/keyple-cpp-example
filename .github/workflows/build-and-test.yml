@@ -1,0 +1,15 @@
+name: Build and Test code
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+
+jobs:
+  call-reusable-workflow:
+    uses: eclipse-keyple/keyple-actions/.github/workflows/reusable-cpp-build-and-test.yml@main # NOSONAR - Same organization, trusted source
+    with:
+      test_executable_name: ''
+      extra_linux_deps: 'libpcsclite-dev'
