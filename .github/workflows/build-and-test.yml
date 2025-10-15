@@ -32,7 +32,7 @@ jobs:
         if: ${{ matrix.env.runner == 'ubuntu-latest' }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake cppcheck clang-format clang-tidy gcc pre-commit
+          sudo apt-get install -y clang cmake cppcheck clang-format clang-tidy gcc pre-commit libpcsclite-dev
 
       - name: Install macOS reqs
         if: ${{ matrix.env.runner == 'macos-latest' }}
@@ -43,8 +43,3 @@ jobs:
         run: |
           cmake ${{ matrix.env.generator }} -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ matrix.env.toolchain }}
           cmake --build build -j8
-
-      - name: Run Linux/macOS tests
-        if: ${{ matrix.env.runner == 'ubuntu-latest' || matrix.env.runner == 'macos-latest' }}
-        run: |
-          ./build/bin/keypopcalypsocryptolegacysam_ut

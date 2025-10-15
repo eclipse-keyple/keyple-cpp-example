@@ -132,17 +132,17 @@ initGenericCardExtensionService() {
  */
 static std::shared_ptr<CardReader>
 getReader(
-    std::shared_ptr<Plugin> plugin,
+    std::shared_ptr<Plugin> _plugin,
     const std::string& readerNameRegex,
     const bool isContactless,
     const PcscReader::IsoProtocol isoProtocol,
     const PcscReader::SharingMode sharingMode,
     const std::string& physicalProtocolName,
     const std::string& logicalProtocolName) {
-    const auto reader(plugin->findReader(readerNameRegex));
+    const auto reader(_plugin->findReader(readerNameRegex));
 
     auto pcscReader(std::dynamic_pointer_cast<PcscReader>(
-        plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
+        _plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
 
     pcscReader->setContactless(isContactless)
         .setIsoProtocol(isoProtocol)
