@@ -12,3 +12,4 @@ jobs:
     uses: eclipse-keyple/keyple-actions/.github/workflows/reusable-cpp-build-and-test.yml@main # NOSONAR - Same organization, trusted source
     with:
       test_executable_name: ''
+      extra_linux_deps: 'libpcsclite-dev'
