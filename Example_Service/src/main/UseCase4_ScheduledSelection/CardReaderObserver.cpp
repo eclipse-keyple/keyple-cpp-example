@@ -1,66 +1,83 @@
-/**************************************************************************************************
- * Copyright (c) 2022 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/* ****************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Distribution License 1.0 which is available at        *
+ * https://www.eclipse.org/org/documents/edl-v10.php                          *
+ *                                                                            *
+ * SPDX-License-Identifier: BSD-3-Clause                                      *
+ ******************************************************************************/
 
-#include "CardReaderObserver.h"
+#include "CardReaderObserver.hpp"
 
-using namespace keyple::core::service;
+#include <memory>
+#include <string>
 
-CardReaderObserver::CardReaderObserver(std::shared_ptr<ObservableCardReader> observableCardReader,
-                                       std::shared_ptr<CardSelectionManager> cardSelectionManager)
-: mObservableCardReader(observableCardReader), mCardSelectionManager(cardSelectionManager) {}
+#include "keypop/reader/selection/spi/SmartCard.hpp"
 
-void CardReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> event)
-{
+using keypop::reader::selection::spi::SmartCard;
+
+CardReaderObserver::CardReaderObserver(
+    std::shared_ptr<ObservableCardReader> observableCardReader,
+    std::shared_ptr<CardSelectionManager> cardSelectionManager)
+: mObservableCardReader(observableCardReader)
+, mCardSelectionManager(cardSelectionManager) {
+}
+
+void
+CardReaderObserver::onReaderEvent(
+    const std::shared_ptr<CardReaderEvent> event) {
     switch (event->getType()) {
-    case CardReaderEvent::CARD_MATCHED:
-        {
+    case CardReaderEvent::CARD_MATCHED: {
         /* The selection has one target, get the result at index 0 */
-        const std::shared_ptr<SmartCard> smartCard =
-            mCardSelectionManager->parseScheduledCardSelectionsResponse(
-                event->getScheduledCardSelectionsResponse())
-                ->getActiveSmartCard();
+        const std::shared_ptr<SmartCard> smartCard(
+            mCardSelectionManager
+                ->parseScheduledCardSelectionsResponse(
+                    event->getScheduledCardSelectionsResponse())
+                ->getActiveSmartCard());
 
-        mLogger->info("Observer notification: the selection of the card has succeeded and return " \
-                      "the SmartCard = %\n",
-                      smartCard);
+        mLogger->info(
+            "Observer notification: the selection of the card has succeeded "
+            "and return the SmartCard = %\n",
+            smartCard);
 
         mLogger->info("= #### End of the card processing\n");
-        }
-        break;
+    } break;
     case CardReaderEvent::CARD_INSERTED:
-        mLogger->error("CARD_INSERTED event: should not have occurred due to the MATCHED_ONLY " \
-                       "selection mode\n");
+        mLogger->error(
+            "CARD_INSERTED event: should not have occurred due to the "
+            "MATCHED_ONLY selection mode\n");
         break;
     case CardReaderEvent::CARD_REMOVED:
-        mLogger->trace("There is no card inserted anymore. Return to the waiting state...\n");
+        mLogger->trace(
+            "There is no card inserted anymore. Return to the waiting "
+            "state...\n");
         break;
     default:
         break;
     }
 
-    if (event->getType() == CardReaderEvent::CARD_INSERTED ||
-        event->getType() == CardReaderEvent::CARD_MATCHED) {
-
+    if (event->getType() == CardReaderEvent::CARD_INSERTED
+        || event->getType() == CardReaderEvent::CARD_MATCHED) {
         /*
-        * Informs the underlying layer of the end of the card processing, in order to manage the
-        * removal sequence.
-        */
+         * Informs the underlying layer of the end of the card processing, in
+         * order to manage the removal sequence.
+         */
         mObservableCardReader->finalizeCardProcessing();
     }
 }
 
-void CardReaderObserver::onReaderObservationError(const std::string& pluginName,
-                                                  const std::string& readerName,
-                                                  const std::shared_ptr<Exception> e)
-{
-    mLogger->error("An exception occurred in plugin '%', reader '%'\n", pluginName, readerName, e);
+void
+CardReaderObserver::onReaderObservationError(
+    const std::string& pluginName,
+    const std::string& readerName,
+    const std::shared_ptr<std::exception> e) {
+    mLogger->error(
+        "An exception occurred in plugin '%', reader '%'\n",
+        pluginName,
+        readerName,
+        e);
 }

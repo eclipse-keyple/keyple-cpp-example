@@ -1,187 +1,335 @@
-/**************************************************************************************************
- * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/* ****************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Distribution License 1.0 which is available at        *
+ * https://www.eclipse.org/org/documents/edl-v10.php                          *
+ *                                                                            *
+ * SPDX-License-Identifier: BSD-3-Clause                                      *
+ ******************************************************************************/
 
-/* Calypsonet Terminal Reader */
-#include "CardReader.h"
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
-/* Keyple Card Calypso */
-#include "CalypsoExtensionService.h"
+#include "keyple/card/calypso/CalypsoExtensionService.hpp"
+#include "keyple/card/calypso/crypto/legacysam/LegacySamExtensionService.hpp"
+#include "keyple/card/calypso/crypto/legacysam/LegacySamUtil.hpp"
+#include "keyple/core/service/Plugin.hpp"
+#include "keyple/core/service/SmartCardService.hpp"
+#include "keyple/core/service/SmartCardServiceProvider.hpp"
+#include "keyple/core/util/HexUtil.hpp"
+#include "keyple/core/util/cpp/Logger.hpp"
+#include "keyple/core/util/cpp/LoggerFactory.hpp"
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
+#include "keyple/plugin/pcsc/PcscReader.hpp"
+#include "keyple/plugin/pcsc/PcscSupportedContactProtocol.hpp"
+#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
+#include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
+#include "keypop/calypso/card/WriteAccessLevel.hpp"
+#include "keypop/calypso/card/card/CalypsoCard.hpp"
+#include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
+#include "keypop/calypso/card/cpp/SecureRegularModeTransactionManagerBase.hpp"
+#include "keypop/calypso/card/transaction/SecureSymmetricCryptoTransactionManager.hpp"
+#include "keypop/calypso/card/transaction/SymmetricCryptoSecuritySetting.hpp"
+#include "keypop/calypso/crypto/legacysam/LegacySamApiFactory.hpp"
+#include "keypop/calypso/crypto/legacysam/sam/LegacySam.hpp"
+#include "keypop/reader/CardReader.hpp"
+#include "keypop/reader/ChannelControl.hpp"
+#include "keypop/reader/ReaderApiFactory.hpp"
+#include "keypop/reader/selection/CardSelectionManager.hpp"
+#include "keypop/reader/selection/CardSelectionResult.hpp"
+#include "keypop/reader/selection/IsoCardSelector.hpp"
+#include "keypop/reader/selection/spi/SmartCard.hpp"
 
-/* Keyple Core Service */
-#include "ConfigurableReader.h"
-#include "SmartCardService.h"
-#include "SmartCardServiceProvider.h"
+#include "../common/ConfigurationUtil.hpp"
 
-/* Keyple Core Util */
-#include "ContactCardCommonProtocol.h"
-#include "ContactlessCardCommonProtocol.h"
-#include "HexUtil.h"
-#include "IllegalStateException.h"
-#include "LoggerFactory.h"
-#include "StringUtils.h"
-
-/* Keyple Plugin Pcsc */
-#include "PcscPlugin.h"
-#include "PcscPluginFactory.h"
-#include "PcscPluginFactoryBuilder.h"
-#include "PcscReader.h"
-#include "PcscSupportedContactlessProtocol.h"
-#include "PcscSupportedContactProtocol.h"
-
-/* Keyple Core Resource */
-#include "CardResource.h"
-#include "CardResourceServiceProvider.h"
-
-/* Keyple Cpp Example */
-#include "CalypsoConstants.h"
-#include "ConfigurationUtil.h"
-
-using namespace calypsonet::terminal::reader;
-using namespace keyple::card::calypso;
-using namespace keyple::core::service;
-using namespace keyple::core::service::resource;
-using namespace keyple::core::util;
-using namespace keyple::core::util::cpp;
-using namespace keyple::core::util::cpp::exception;
-using namespace keyple::core::util::protocol;
-using namespace keyple::plugin::pcsc;
+using keyple::card::calypso::CalypsoExtensionService;
+using keyple::card::calypso::crypto::legacysam::LegacySamExtensionService;
+using keyple::card::calypso::crypto::legacysam::LegacySamUtil;
+using keyple::core::service::Plugin;
+using keyple::core::service::SmartCardService;
+using keyple::core::service::SmartCardServiceProvider;
+using keyple::core::util::HexUtil;
+using keyple::core::util::cpp::Logger;
+using keyple::core::util::cpp::LoggerFactory;
+using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
+using keyple::plugin::pcsc::PcscReader;
+using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
+using keyple::plugin::pcsc::PcscSupportedContactProtocol;
+using keypop::calypso::card::CalypsoCardApiFactory;
+using keypop::calypso::card::WriteAccessLevel;
+using keypop::calypso::card::card::CalypsoCard;
+using keypop::calypso::card::card::CalypsoCardSelectionExtension;
+using keypop::calypso::card::cpp::SecureRegularModeTransactionManagerBase;
+using keypop::calypso::card::transaction::
+    SecureSymmetricCryptoTransactionManager;
+using keypop::calypso::card::transaction::SymmetricCryptoSecuritySetting;
+using keypop::calypso::crypto::legacysam::LegacySamApiFactory;
+using keypop::calypso::crypto::legacysam::sam::LegacySam;
+using keypop::reader::CardReader;
+using keypop::reader::ChannelControl;
+using keypop::reader::ReaderApiFactory;
+using keypop::reader::selection::CardSelectionManager;
+using keypop::reader::selection::CardSelectionResult;
+using keypop::reader::selection::IsoCardSelector;
+using keypop::reader::selection::spi::SmartCard;
 
 /**
- * <h1>Use Case Calypso 4 – Calypso Card authentication (PC/SC)</h1>
+ * Handles the process of a Calypso card authentication using the PC/SC
+ * plugin and the Calypso Card Extension Service.
  *
- * <p>We demonstrate here the authentication of a Calypso card using a Secure Session in which a
- * file from the card is read. The read is certified by verifying the signature of the card by a
- * Calypso SAM.
+ * <p>This class demonstrates the card authentication process, including the
+ * initialization of the Smart Card Service, registering the PC/SC plugin,
+ * checking the compatibility of the Calypso card extension service, and
+ * performing operations with the Keypop Reader and Calypso Card APIs.
  *
- * <p>Two readers are required for this example: a contactless reader for the Calypso Card, a
- * contact reader for the Calypso SAM.
- *
- * <h2>Scenario:</h2>
- *
- * <ul>
- *   <li>Sets up the card resource service to provide a Calypso SAM (C1).
- *   <li>Checks if an ISO 14443-4 card is in the reader, enables the card selection manager.
- *   <li>Attempts to select the specified card (here a Calypso card characterized by its AID) with
- *       an AID-based application selection scenario.
- *   <li>Creates a CardTransactionManager using CardSecuritySetting referencing the selected SAM.
- *   <li>Read a file record in Secure Session.
- * </ul>
- *
- * All results are logged with slf4j.
- *
- * <p>Any unexpected behavior will result in runtime exceptions.
- *
- * @since 2.0.0
+ * <p>The class also demonstrates how to retrieve the card and SAM readers
+ * using regular expressions to match their names and how to operate the
+ * security of transactions using SAM.
  */
-class Main_CardAuthentication_Pcsc {};
-static const std::unique_ptr<Logger> logger =
-    LoggerFactory::getLogger(typeid(Main_CardAuthentication_Pcsc));
+class Main_CardAuthentication_Pcsc { };
+static std::unique_ptr<Logger> logger
+    = LoggerFactory::getLogger(typeid(Main_CardAuthentication_Pcsc));
 
-int main()
-{
-    /* Get the instance of the SmartCardService */
-    std::shared_ptr<SmartCardService> smartCardService = SmartCardServiceProvider::getService();
+/** AID: Keyple test kit profile 1, Application 2 */
+static const std::string AID = "315449432E49434131";
 
-    /* Register the PcscPlugin, get the corresponding generic plugin in return */
-    std::shared_ptr<Plugin> plugin =
-        smartCardService->registerPlugin(PcscPluginFactoryBuilder::builder()->build());
+/* File identifiers */
+static const std::uint8_t SFI_ENVIRONMENT_AND_HOLDER = 0x07;
+static const int RECORD_SIZE = 29;
 
-    /* Get the Calypso card extension service */
-    std::shared_ptr<CalypsoExtensionService> calypsoCardService =
-        CalypsoExtensionService::getInstance();
+/* The plugin used to manage the readers. */
+static std::shared_ptr<Plugin> plugin;
+/* The reader used to communicate with the card. */
+static std::shared_ptr<CardReader> cardReader;
+/* The reader used to communicate with the SAM. */
+static std::shared_ptr<CardReader> samReader;
+/* The factory used to create the selection manager and card selectors. */
+static std::shared_ptr<ReaderApiFactory> readerApiFactory;
+/*
+ * The Calypso factory used to create the selection extension and transaction
+ * managers.
+ */
+static std::shared_ptr<CalypsoCardApiFactory> calypsoCardApiFactory;
+/* The security settings for the card transaction. */
+static std::shared_ptr<SymmetricCryptoSecuritySetting>
+    symmetricCryptoSecuritySetting;
 
-    /* Verify that the extension's API level is consistent with the current service */
-    smartCardService->checkCardExtension(calypsoCardService);
+/**
+ * Initializes the Keyple service.
+ *
+ * <p>Gets an instance of the smart card service, registers the PC/SC plugin,
+ * and prepares the reader API factory for use.
+ */
+static void
+initKeypleService() {
+    std::shared_ptr<SmartCardService> smartCardService(
+        SmartCardServiceProvider::getService());
+    plugin = smartCardService->registerPlugin(
+        PcscPluginFactoryBuilder::builder()->build());
+    readerApiFactory = smartCardService->getReaderApiFactory();
+}
 
-    /* Get the card and SAM readers whose name matches the provided regexs */
-    std::shared_ptr<CardReader> cardReader =
-        ConfigurationUtil::getCardReader(plugin, ConfigurationUtil::CARD_READER_NAME_REGEX);
-    std::shared_ptr<CardReader> samReader =
-        ConfigurationUtil::getSamReader(plugin, ConfigurationUtil::SAM_READER_NAME_REGEX);
+/**
+ * Initializes the card reader with specific configurations.
+ */
+static void
+initCardReader() {
+    cardReader = ConfigurationUtil::getReader(
+        plugin,
+        ConfigurationUtil::CARD_READER_NAME_REGEX,
+        true,
+        PcscReader::IsoProtocol::T1,
+        PcscReader::SharingMode::SHARED,
+        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        ConfigurationUtil::ISO_CARD_PROTOCOL);
+}
 
-    logger->info("=============== " \
-                 "UseCase Calypso #4: Calypso card authentication " \
-                 "==================\n");
+/**
+ * Initializes the SAM reader with specific configurations.
+ */
+static void
+initSamReader() {
+    samReader = ConfigurationUtil::getReader(
+        plugin,
+        ConfigurationUtil::SAM_READER_NAME_REGEX,
+        false,
+        PcscReader::IsoProtocol::ANY,
+        PcscReader::SharingMode::SHARED,
+        PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+        ConfigurationUtil::SAM_PROTOCOL);
+}
 
-    /* Check if a card is present in the reader */
+/**
+ * Initializes the Calypso card extension service.
+ */
+static void
+initCalypsoCardExtensionService() {
+    std::shared_ptr<CalypsoExtensionService> calypsoExtensionService(
+        CalypsoExtensionService::getInstance());
+    SmartCardServiceProvider::getService()->checkCardExtension(
+        calypsoExtensionService);
+    calypsoCardApiFactory = calypsoExtensionService->getCalypsoCardApiFactory();
+}
+
+/**
+ * Selects the SAM C1 for the transaction.
+ *
+ * <p>Creates a SAM selection manager, prepares the selection, and processes
+ * the SAM selection scenario.
+ *
+ * @param reader The card reader used to communicate with the SAM.
+ * @return The selected SAM for the transaction.
+ */
+static std::shared_ptr<LegacySam>
+selectSam(std::shared_ptr<CardReader> reader) {
+    std::shared_ptr<CardSelectionManager> samSelectionManager(
+        readerApiFactory->createCardSelectionManager());
+
+    std::shared_ptr<IsoCardSelector> cardSelector(
+        readerApiFactory->createIsoCardSelector());
+    cardSelector->filterByPowerOnData(
+        LegacySamUtil::buildPowerOnDataFilter(
+            LegacySam::ProductType::SAM_C1, ""));
+
+    std::shared_ptr<LegacySamApiFactory> legacySamApiFactory(
+        LegacySamExtensionService::getInstance()->getLegacySamApiFactory());
+
+    samSelectionManager->prepareSelection(
+        cardSelector, legacySamApiFactory->createLegacySamSelectionExtension());
+
+    const std::shared_ptr<CardSelectionResult> samSelectionResult(
+        samSelectionManager->processCardSelectionScenario(reader));
+
+    if (samSelectionResult->getActiveSmartCard() == nullptr) {
+        throw IllegalStateException("The selection of the SAM failed.");
+    }
+
+    return std::dynamic_pointer_cast<LegacySam>(
+        samSelectionResult->getActiveSmartCard());
+}
+
+/**
+ * Initializes the security settings for the transaction.
+ *
+ * <p>Selects the SAM and sets up the symmetric crypto security setting for
+ * securing the transaction.
+ */
+static void
+initSecuritySetting() {
+    std::shared_ptr<LegacySam> sam(selectSam(samReader));
+
+    symmetricCryptoSecuritySetting
+        = calypsoCardApiFactory->createSymmetricCryptoSecuritySetting(
+            LegacySamExtensionService::getInstance()
+                ->getLegacySamApiFactory()
+                ->createSymmetricCryptoCardTransactionManagerFactory(
+                    samReader, sam));
+}
+
+/**
+ * Selects the Calypso card for the transaction based on the specified
+ * Application Identifier (AID).
+ *
+ * @param reader The reader used to communicate with the card.
+ * @param aid The Application Identifier (AID) used to select the application
+ * on the card.
+ * @return The selected Calypso card ready for the transaction.
+ */
+static std::shared_ptr<CalypsoCard>
+selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
+    std::shared_ptr<CardSelectionManager> cardSelectionManager(
+        readerApiFactory->createCardSelectionManager());
+    std::shared_ptr<IsoCardSelector> cardSelector(
+        readerApiFactory->createIsoCardSelector());
+    cardSelector->filterByDfName(aid);
+
+    std::unique_ptr<CalypsoCardSelectionExtension>
+        calypsoCardSelectionExtension(
+            calypsoCardApiFactory->createCalypsoCardSelectionExtension());
+    cardSelectionManager->prepareSelection(
+        cardSelector, std::move(calypsoCardSelectionExtension));
+
+    const std::shared_ptr<CardSelectionResult> selectionResult(
+        cardSelectionManager->processCardSelectionScenario(reader));
+
+    if (selectionResult->getActiveSmartCard() == nullptr) {
+        throw IllegalStateException(
+            "The selection of the application '" + aid + "' failed.");
+    }
+
+    const std::shared_ptr<SmartCard> card(
+        selectionResult->getActiveSmartCard());
+
+    return std::dynamic_pointer_cast<CalypsoCard>(card);
+}
+
+int
+main() {
+    logger->info(
+        "= UseCase Calypso #4: Calypso card authentication "
+        "==================\n");
+
+    /* Initialize the context */
+    initKeypleService();
+    initCalypsoCardExtensionService();
+    initCardReader();
+    initSamReader();
+    initSecuritySetting();
+
+    /* Check the card presence */
     if (!cardReader->isCardPresent()) {
         throw IllegalStateException("No card is present in the reader.");
     }
 
-    /* Get the Calypso SAM SmartCard after selection. */
-    std::shared_ptr<CalypsoSam> calypsoSam = ConfigurationUtil::getSam(samReader);
-
-    logger->info("= SAM  = %\n", calypsoSam);
-
-    logger->info("= #### Select application with AID = '%'.\n", CalypsoConstants::AID);
-
-    /* Create a card selection manager. */
-    std::shared_ptr<CardSelectionManager> cardSelectionManager =
-        smartCardService->createCardSelectionManager();
+    /* Select the card */
+    std::shared_ptr<CalypsoCard> calypsoCard = selectCard(cardReader, AID);
 
     /*
-     * Create a card selection using the Calypso card extension.
-     * Prepare the selection by adding the created Calypso card selection to the card selection
-     * scenario.
+     * Execute the transaction: the environment file is read within a secure
+     * session to ensure data authenticity.
+     * Specifying expected response lengths in read commands serves as a
+     * protective measure for legacy cards.
+     *
+     * The keypop API declares createSecureRegularModeTransactionManager() as
+     * returning a SecureRegularModeTransactionManagerBase, which does not
+     * itself expose prepareOpenSecureSession() (it's only declared on
+     * SecureSymmetricCryptoTransactionManager<T>, a sibling interface
+     * implemented by the same concrete object). A downcast is required to
+     * reach it.
      */
-    std::shared_ptr<CalypsoCardSelection> cardSelection = calypsoCardService->createCardSelection();
-    cardSelection->acceptInvalidatedCard().filterByDfName(CalypsoConstants::AID);
-    cardSelectionManager->prepareSelection(cardSelection);
+    std::unique_ptr<SecureRegularModeTransactionManagerBase>
+        cardTransactionManager(
+            calypsoCardApiFactory->createSecureRegularModeTransactionManager(
+                cardReader, calypsoCard, symmetricCryptoSecuritySetting));
 
-    /* Actual card communication: run the selection scenario */
-    const std::shared_ptr<CardSelectionResult> selectionResult =
-        cardSelectionManager->processCardSelectionScenario(cardReader);
+    dynamic_cast<SecureSymmetricCryptoTransactionManager<
+        SecureRegularModeTransactionManagerBase>*>(cardTransactionManager.get())
+        ->prepareOpenSecureSession(WriteAccessLevel::DEBIT)
+        .prepareReadRecords(SFI_ENVIRONMENT_AND_HOLDER, 1, 1, RECORD_SIZE)
+        .prepareCloseSecureSession()
+        .processCommands(ChannelControl::CLOSE_AFTER);
 
-    /* Check the selection result */
-    if (selectionResult->getActiveSmartCard() == nullptr) {
-        throw IllegalStateException("The selection of the application '" +
-                                    CalypsoConstants::AID +
-                                    "' failed.");
-    }
+    logger->info(
+        "The secure session has ended successfully; the card is "
+        "authenticated, and the read data is certified.\n");
 
-    /* Get the SmartCard resulting of the selection */
-    const std::shared_ptr<SmartCard> card = selectionResult->getActiveSmartCard();
-    auto calypsoCard = std::dynamic_pointer_cast<CalypsoCard>(card);
+    const std::string csn(
+        HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
+    logger->info("Calypso Serial Number = %\n", csn);
 
-    logger->info("= SmartCard = %\n", calypsoCard);
-
-    const std::string csn = HexUtil::toHex(calypsoCard->getApplicationSerialNumber());
-    logger->info("Calypso Serial Number = %\n",
-                 HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
-
-    /* Create security settings that reference the SAM */
-    std::shared_ptr<CardSecuritySetting> cardSecuritySetting =
-        CalypsoExtensionService::getInstance()->createCardSecuritySetting();
-    cardSecuritySetting->setControlSamResource(samReader, calypsoSam);
-
-    /* Performs file reads using the card transaction manager in secure mode. */
-    calypsoCardService->createCardTransaction(cardReader, calypsoCard, cardSecuritySetting)
-                      ->prepareReadRecords(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER,
-                                           CalypsoConstants::RECORD_NUMBER_1,
-                                           CalypsoConstants::RECORD_NUMBER_1,
-                                           CalypsoConstants::RECORD_SIZE)
-                       .processOpening(WriteAccessLevel::DEBIT)
-                       .prepareReleaseCardChannel()
-                       .processClosing();
-
-    logger->info("The Secure Session ended successfully, the card is authenticated and the data " \
-                 "read are certified\n");
-
-    const std::string sfiEnvHolder = HexUtil::toHex(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER);
-    logger->info("File %h, rec 1: FILE_CONTENT = %\n",
-                 sfiEnvHolder,
-                 calypsoCard->getFileBySfi(CalypsoConstants::SFI_ENVIRONMENT_AND_HOLDER));
-
-    logger->info("= #### End of the Calypso card processing\n");
+    const std::string sfiEnvHolder(HexUtil::toHex(SFI_ENVIRONMENT_AND_HOLDER));
+    logger->info(
+        "File SFI %h, rec 1: FILE_CONTENT = %\n",
+        sfiEnvHolder,
+        calypsoCard->getFileBySfi(SFI_ENVIRONMENT_AND_HOLDER));
 
     return 0;
 }
