@@ -97,7 +97,7 @@ static std::string cardReaderRegex = CARD_READER_NAME_REGEX;
 static std::string samReaderRegex = SAM_READER_NAME_REGEX;
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 static std::string cardAid = AID;
 
@@ -129,7 +129,7 @@ displayUsageAndExit() {
               << AID << "\" -c=\"" << CARD_READER_NAME_REGEX << "\" -s=\""
               << SAM_READER_NAME_REGEX << "\")" << std::endl;
     std::cout << " -a, --aid=\"APPLICATION_AID\"    between 5 and 16 hex "
-                 "bytes (e.g. \"315449432E49434131\")"
+                 "bytes (e.g. \"A000000291FF9101\")"
               << std::endl;
     std::cout << " -c, --card=\"CARD_READER_REGEX\" regular expression "
                  "matching the card reader name (e.g. \"ASK Logo.*\")"

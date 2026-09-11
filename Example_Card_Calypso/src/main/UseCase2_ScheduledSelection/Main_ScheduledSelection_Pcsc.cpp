@@ -72,7 +72,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ScheduledSelection_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 /* File identifiers */
 static const std::uint8_t SFI_ENVIRONMENT_AND_HOLDER = 0x07;

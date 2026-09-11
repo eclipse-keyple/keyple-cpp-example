@@ -97,7 +97,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_MultipleSession_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 /* File identifiers */
 static const std::uint8_t SFI_EVENT_LOG = 0x08;

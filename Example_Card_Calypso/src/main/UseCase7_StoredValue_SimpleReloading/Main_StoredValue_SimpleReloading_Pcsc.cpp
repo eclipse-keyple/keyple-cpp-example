@@ -96,7 +96,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_StoredValue_SimpleReloading_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 /* The plugin used to manage the readers. */
 static std::shared_ptr<Plugin> plugin;

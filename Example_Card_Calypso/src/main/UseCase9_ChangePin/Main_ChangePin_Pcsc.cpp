@@ -96,7 +96,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ChangePin_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KIF = 0x21;
 static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KVC = 0x74;

@@ -109,7 +109,7 @@ static const std::string samReaderRegex
     = ConfigurationUtil::SAM_READER_NAME_REGEX;
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string cardAid = "315449432E49434131";
+static const std::string cardAid = "A000000291FF9101";
 
 static const int counterDecrement = 1;
 static const std::vector<std::uint8_t> newEventRecord(

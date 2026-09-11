@@ -97,7 +97,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_VerifyPin_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 static const std::vector<std::uint8_t> PIN_OK = {0x30, 0x30, 0x30, 0x30};
 static const std::vector<std::uint8_t> PIN_KO = {0x30, 0x30, 0x30, 0x31};
