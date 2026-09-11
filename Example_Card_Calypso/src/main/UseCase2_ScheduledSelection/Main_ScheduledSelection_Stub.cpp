@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -151,8 +152,8 @@ initCalypsoCardExtensionService() {
     calypsoCardApiFactory = calypsoExtensionService->getCalypsoCardApiFactory();
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "= UseCase Generic #2: scheduled selection ==================\n");
 
@@ -218,5 +219,16 @@ main() {
     /* The program will remain active indefinitely until interrupted (CTRL-C to
      * exit) */
     while (true) {
+    }
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
     }
 }

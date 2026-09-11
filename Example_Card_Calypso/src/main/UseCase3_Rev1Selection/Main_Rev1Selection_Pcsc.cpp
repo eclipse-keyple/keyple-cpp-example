@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -131,8 +132,8 @@ initCalypsoCardExtensionService() {
     calypsoCardApiFactory = calypsoExtensionService->getCalypsoCardApiFactory();
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "= UseCase Calypso #3: selection of a rev1 card "
         "==================\n");
@@ -214,4 +215,15 @@ main() {
     logger->info("= #### End of the Calypso card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

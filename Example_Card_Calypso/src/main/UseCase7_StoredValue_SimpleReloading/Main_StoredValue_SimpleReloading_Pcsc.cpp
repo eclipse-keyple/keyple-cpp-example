@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -245,8 +246,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "= UseCase Calypso #7: Stored Value reloading ==================\n");
 
@@ -314,4 +315,15 @@ main() {
     logger->info("= #### End of the Calypso card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

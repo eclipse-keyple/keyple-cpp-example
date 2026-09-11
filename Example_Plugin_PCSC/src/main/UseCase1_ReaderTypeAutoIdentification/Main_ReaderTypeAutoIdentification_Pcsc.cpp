@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
 #include <string>
 
@@ -71,8 +72,8 @@ static const std::string contactlessFilter
       ".*00 00|.*5x21 0)).*(ASK LoGO|HID OMNIKEY 5427 CK|contactless|00 01|"
       "5x21-CL 0).*";
 
-int
-main() {
+static int
+runExample() {
     /* Get the instance of the SmartCardService (singleton pattern) */
     std::shared_ptr<SmartCardService> smartCardService
         = SmartCardServiceProvider::getService();
@@ -97,4 +98,15 @@ main() {
     }
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

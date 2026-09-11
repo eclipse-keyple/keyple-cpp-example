@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -207,11 +208,10 @@ selectCard(std::shared_ptr<CardReader> reader) {
     return selectionResult->getActiveSmartCard();
 }
 
-int
-main() {
-    logger->info(
-        "= UseCase Generic #2: protocol based card selection "
-        "==================\n");
+static int
+runExample() {
+    logger->info("= UseCase Generic #2: protocol based card selection "
+                 "==================\n");
 
     initKeypleService();
     initGenericCardExtensionService();
@@ -237,4 +237,15 @@ main() {
     logger->info("= #### End of the generic card processing.\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }
