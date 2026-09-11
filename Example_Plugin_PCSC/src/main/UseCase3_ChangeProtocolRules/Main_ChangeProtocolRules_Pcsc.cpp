@@ -11,12 +11,9 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
-<<<<<<< HEAD
+#include <exception>
 #include <memory>
 #include <string>
-=======
-#include <exception>
->>>>>>> 9119e5e (refactor: catch and report the exceptions escaping the examples)
 
 #include "keyple/card/generic/GenericExtensionService.hpp"
 #include "keyple/core/common/KeypleCardExtension.hpp"

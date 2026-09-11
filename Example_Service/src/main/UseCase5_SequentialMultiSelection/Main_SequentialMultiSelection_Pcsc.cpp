@@ -28,10 +28,7 @@
 #include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-<<<<<<< HEAD
 #include "keypop/genericcard/GenericCardSelectionExtension.hpp"
-=======
->>>>>>> 755260a (chore: migrate the examples off the deprecated PC/SC protocol classes)
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
@@ -52,10 +49,7 @@ using keyple::core::util::cpp::exception::IllegalStateException;
 using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-<<<<<<< HEAD
 using keypop::genericcard::GenericCardSelectionExtension;
-=======
->>>>>>> 755260a (chore: migrate the examples off the deprecated PC/SC protocol classes)
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -166,6 +160,12 @@ runExample() {
     /* Get the contactless reader whose name matches the provided regex */
     std::shared_ptr<CardReader> cardReader(
         plugin->findReader(ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX));
+
+    if (cardReader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '"
+            + ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX + "' was found");
+    }
 
     /*
      * Configure the reader with parameters suitable for contactless operations.

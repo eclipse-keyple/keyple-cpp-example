@@ -140,9 +140,13 @@ getReader(
     const PcscReader::SharingMode sharingMode) {
     const auto reader(_plugin->findReader(readerNameRegex));
 
-    auto pcscReader(
-        std::dynamic_pointer_cast<PcscReader>(_plugin->getReaderExtension(
-            typeid(PcscReader), reader->getName())));
+    if (reader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '" + readerNameRegex + "' was found");
+    }
+
+    auto pcscReader(std::dynamic_pointer_cast<PcscReader>(
+        _plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
 
     pcscReader->setContactless(isContactless)
         .setIsoProtocol(isoProtocol)
