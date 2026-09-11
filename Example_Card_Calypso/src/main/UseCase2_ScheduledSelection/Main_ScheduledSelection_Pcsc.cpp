@@ -23,6 +23,7 @@
 #include "keyple/core/service/SmartCardServiceProvider.hpp"
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
+#include "keyple/core/util/cpp/Thread.hpp"
 #include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
@@ -43,6 +44,7 @@ using keyple::core::service::SmartCardService;
 using keyple::core::service::SmartCardServiceProvider;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
+using keyple::core::util::cpp::Thread;
 using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
