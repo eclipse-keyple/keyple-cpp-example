@@ -49,6 +49,7 @@
 #include "keypop/reader/selection/IsoCardSelector.hpp"
 #include "keypop/reader/selection/spi/SmartCard.hpp"
 
+#include "../common/CalypsoConstants.h"
 #include "../common/ConfigurationUtil.hpp"
 
 using keyple::card::calypso::CalypsoExtensionService;
@@ -96,10 +97,6 @@ static std::unique_ptr<Logger> logger
 /** AID: Keyple test kit profile 1, Application 2 */
 static const std::string AID = "A000000291FF9101";
 
-static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KIF = 0x21;
-static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KVC = 0x74;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KIF = 0x30;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x74;
 
 /* The plugin used to manage the readers. */
 static std::shared_ptr<Plugin> plugin;
@@ -280,11 +277,11 @@ runExample() {
     /* Add the key identifiers needed for ciphering the PIN */
     symmetricCryptoSecuritySetting
         ->setPinVerificationCipheringKey(
-            PIN_VERIFICATION_CIPHERING_KEY_KIF,
-            PIN_VERIFICATION_CIPHERING_KEY_KVC)
+            CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KIF,
+            CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC)
         .setPinModificationCipheringKey(
-            PIN_MODIFICATION_CIPHERING_KEY_KIF,
-            PIN_MODIFICATION_CIPHERING_KEY_KVC);
+            CalypsoConstants::PIN_MODIFICATION_CIPHERING_KEY_KIF,
+            CalypsoConstants::PIN_MODIFICATION_CIPHERING_KEY_KVC);
 
     /*
      * Instantiate a Secure Regular Mode Transaction Manager to handle
