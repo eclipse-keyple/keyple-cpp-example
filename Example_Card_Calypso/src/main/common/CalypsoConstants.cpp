@@ -12,7 +12,7 @@
 
 #include "CalypsoConstants.h"
 
-const std::string CalypsoConstants::AID = "315449432E49434131";
+const std::string CalypsoConstants::AID = "A000000291FF9101";
 
 const uint8_t CalypsoConstants::RECORD_SIZE = 29;
 const uint8_t CalypsoConstants::RECORD_NUMBER_1 = 1;
