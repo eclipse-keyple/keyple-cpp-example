@@ -151,7 +151,7 @@ CardReaderObserver::onReaderEvent(
 
         } catch (const std::exception& e) {
             mLogger->error(
-                "%Transaction failed with exception: %%\n",
+                "%Transaction failed with exception: % %\n",
                 ANSI_RED,
                 e.what(),
                 ANSI_RESET);
@@ -188,8 +188,8 @@ CardReaderObserver::onReaderObservationError(
     const std::string& readerName,
     const std::shared_ptr<std::exception> e) {
     mLogger->error(
-        "An exception occurred in plugin '%', reader '%'\n",
+        "An exception occurred in plugin '%', reader '%': %\n",
         pluginName,
         readerName,
-        e);
+        e ? e->what() : "unknown");
 }

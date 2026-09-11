@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
 
 #include "common/ConfigurationUtil.hpp"
@@ -24,9 +25,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
@@ -45,9 +46,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -88,8 +89,8 @@ class Main_GroupedMultiSelection_Pcsc { };
 const std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_GroupedMultiSelection_Pcsc));
 
-int
-main() {
+static int
+runExample() {
     /* Get the instance of the SmartCardService (singleton pattern) */
     std::shared_ptr<SmartCardService> smartCardService(
         SmartCardServiceProvider::getService());
@@ -115,6 +116,13 @@ main() {
     std::shared_ptr<CardReader> cardReader(
         plugin->findReader(ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX));
 
+    if (cardReader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '"
+            + ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX
+            + "' was found");
+    }
+
     /*
      * Configure the reader with parameters suitable for contactless operations.
      */
@@ -125,7 +133,7 @@ main() {
         .setSharingMode(PcscReader::SharingMode::SHARED);
     std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(
-            PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+            PcscCardCommunicationProtocol::ISO_14443_4.getName(),
             ConfigurationUtil::ISO_CARD_PROTOCOL);
 
     logger->info("=============== "
@@ -212,4 +220,15 @@ main() {
     logger->info("= #### End of the generic card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

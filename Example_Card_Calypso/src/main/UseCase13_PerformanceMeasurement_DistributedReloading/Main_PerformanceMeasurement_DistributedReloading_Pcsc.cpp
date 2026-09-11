@@ -13,6 +13,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -29,10 +30,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactProtocol.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/WriteAccessLevel.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
@@ -64,10 +64,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
-using keyple::plugin::pcsc::PcscSupportedContactProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::WriteAccessLevel;
 using keypop::calypso::card::card::CalypsoCard;
@@ -109,7 +108,7 @@ static const std::string samReaderRegex
     = ConfigurationUtil::SAM_READER_NAME_REGEX;
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string cardAid = "315449432E49434131";
+static const std::string cardAid = "A000000291FF9101";
 
 static const int counterIncrement = 1;
 static const std::vector<std::uint8_t> newContractListRecord(
@@ -165,7 +164,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ConfigurationUtil::ISO_CARD_PROTOCOL);
 }
 
@@ -180,7 +179,7 @@ initSamReader() {
         false,
         PcscReader::IsoProtocol::ANY,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+        PcscCardCommunicationProtocol::ISO_7816_3.getName(),
         ConfigurationUtil::SAM_PROTOCOL);
 }
 
@@ -278,8 +277,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "%=============== Performance measurement: validation transaction "
         "===============\n",
@@ -415,7 +414,7 @@ main() {
                     ANSI_RESET);
             } catch (const std::exception& e) {
                 logger->info(
-                    "%Transaction failed with exception: %s %\n",
+                    "%Transaction failed with exception: % %\n",
                     ANSI_RED,
                     e.what(),
                     ANSI_RESET);
@@ -428,4 +427,15 @@ main() {
     logger->info("Exiting the program on user's request.\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

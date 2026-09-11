@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,9 +25,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
@@ -47,9 +48,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::card::CalypsoCard;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
@@ -86,7 +87,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ExplicitSelectionAid_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 /* File identifiers */
 static const std::uint8_t SFI_ENVIRONMENT_AND_HOLDER = 0x07;
@@ -132,7 +133,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ConfigurationUtil::ISO_CARD_PROTOCOL);
 }
 
@@ -148,8 +149,8 @@ initCalypsoCardExtensionService() {
     calypsoCardApiFactory = calypsoExtensionService->getCalypsoCardApiFactory();
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "= UseCase Calypso #1: AID based explicit selection "
         "==================\n");
@@ -209,4 +210,15 @@ main() {
     logger->info("= #### End of the Calypso card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

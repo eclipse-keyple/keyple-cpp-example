@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -30,10 +31,9 @@
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/Thread.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactProtocol.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
@@ -49,6 +49,7 @@
 #include "keypop/reader/selection/IsoCardSelector.hpp"
 #include "keypop/reader/selection/spi/SmartCard.hpp"
 
+#include "../common/CalypsoConstants.h"
 #include "../common/ConfigurationUtil.hpp"
 
 using keyple::card::calypso::CalypsoExtensionService;
@@ -62,10 +63,9 @@ using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::Thread;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
-using keyple::plugin::pcsc::PcscSupportedContactProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::card::CalypsoCard;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
@@ -95,12 +95,8 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ChangePin_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
-static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KIF = 0x21;
-static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KVC = 0x79;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KIF = 0x30;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x79;
 
 /* The plugin used to manage the readers. */
 static std::shared_ptr<Plugin> plugin;
@@ -142,7 +138,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ConfigurationUtil::ISO_CARD_PROTOCOL);
 }
 
@@ -157,7 +153,7 @@ initSamReader() {
         false,
         PcscReader::IsoProtocol::ANY,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+        PcscCardCommunicationProtocol::ISO_7816_3.getName(),
         ConfigurationUtil::SAM_PROTOCOL);
 }
 
@@ -252,8 +248,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "= UseCase Calypso #9: Calypso card Change PIN ==================\n");
 
@@ -281,11 +277,11 @@ main() {
     /* Add the key identifiers needed for ciphering the PIN */
     symmetricCryptoSecuritySetting
         ->setPinVerificationCipheringKey(
-            PIN_VERIFICATION_CIPHERING_KEY_KIF,
-            PIN_VERIFICATION_CIPHERING_KEY_KVC)
+            CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KIF,
+            CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC)
         .setPinModificationCipheringKey(
-            PIN_MODIFICATION_CIPHERING_KEY_KIF,
-            PIN_MODIFICATION_CIPHERING_KEY_KVC);
+            CalypsoConstants::PIN_MODIFICATION_CIPHERING_KEY_KIF,
+            CalypsoConstants::PIN_MODIFICATION_CIPHERING_KEY_KVC);
 
     /*
      * Instantiate a Secure Regular Mode Transaction Manager to handle
@@ -329,4 +325,15 @@ main() {
     logger->info("= #### End of the Calypso card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <vector>
@@ -184,18 +185,18 @@ public:
         const std::string& readerName,
         const std::shared_ptr<std::exception> e) override {
         logger->error(
-            "An exception occurred in plugin '%', reader '%'\n",
+            "An exception occurred in plugin '%', reader '%': %\n",
             pluginName,
             readerName,
-            e);
+            e ? e->what() : "unknown");
     }
 
 private:
     std::shared_ptr<PcscReader> mPcscReader;
 };
 
-int
-main() {
+static int
+runExample() {
     /* Get the instance of the SmartCardService (singleton pattern) */
     std::shared_ptr<SmartCardServiceAdapter> smartCardService(
         SmartCardServiceProvider::getService());
@@ -280,5 +281,16 @@ main() {
 
     /* Wait indefinitely. CTRL-C to exit. */
     while (1) {
+    }
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
     }
 }

@@ -16,8 +16,10 @@
 #include <memory>
 #include <string>
 
+#include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 
+using keyple::core::util::cpp::exception::IllegalStateException;
 using keypop::reader::ConfigurableCardReader;
 
 const std::string ConfigurationUtil::ISO_CARD_PROTOCOL = "ISO_14443_4_CARD";
@@ -40,6 +42,11 @@ ConfigurationUtil::getReader(
     const std::string& physicalProtocolName,
     const std::string& logicalProtocolName) {
     std::shared_ptr<CardReader> reader(plugin->findReader(readerNameRegex));
+
+    if (reader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '" + readerNameRegex + "' was found");
+    }
 
     std::dynamic_pointer_cast<PcscReader>(
         plugin->getReaderExtension(typeid(PcscReader), reader->getName()))

@@ -11,6 +11,8 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
+
 #include "keyple/core/service/Plugin.hpp"
 #include "keyple/core/service/SmartCardService.hpp"
 #include "keyple/core/service/SmartCardServiceProvider.hpp"
@@ -75,8 +77,8 @@ static const std::string contactFilter = ".*Identive.*|"
                                          ".*00 00.*|"
                                          ".*5x21 0.*";
 
-int
-main() {
+static int
+runExample() {
     /* Get the instance of the SmartCardService (singleton pattern) */
     std::shared_ptr<SmartCardService> smartCardService
         = SmartCardServiceProvider::getService();
@@ -102,4 +104,15 @@ main() {
     }
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

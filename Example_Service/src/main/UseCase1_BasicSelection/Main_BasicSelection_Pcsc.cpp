@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
 
 #include "keyple/card/generic/ChannelControl.hpp"
@@ -21,9 +22,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
@@ -38,9 +39,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -141,6 +142,11 @@ getReader(
     const std::string& logicalProtocolName) {
     const auto reader(_plugin->findReader(readerNameRegex));
 
+    if (reader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '" + readerNameRegex + "' was found");
+    }
+
     auto pcscReader(std::dynamic_pointer_cast<PcscReader>(
         _plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
 
@@ -168,7 +174,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::EXCLUSIVE,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ISO_CARD_PROTOCOL);
 }
 
@@ -202,8 +208,8 @@ selectCard(std::shared_ptr<CardReader> reader) {
     return selectionResult->getActiveSmartCard();
 }
 
-int
-main() {
+static int
+runExample() {
     Logger::setLoggerLevel(Logger::Level::logTrace);
     logger->info("= UseCase Generic #1: basic card selection ==============\n");
 
@@ -236,4 +242,15 @@ main() {
     logger->info("= #### End of the generic card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }
