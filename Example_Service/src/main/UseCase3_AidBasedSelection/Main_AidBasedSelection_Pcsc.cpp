@@ -110,6 +110,13 @@ runExample() {
     std::shared_ptr<CardReader> cardReader(
         plugin->findReader(ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX));
 
+    if (cardReader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '"
+            + ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX
+            + "' was found");
+    }
+
     /*
      * Configure the reader with parameters suitable for contactless operations.
      */

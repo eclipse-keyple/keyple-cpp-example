@@ -142,6 +142,11 @@ getReader(
     const std::string& logicalProtocolName) {
     const auto reader(_plugin->findReader(readerNameRegex));
 
+    if (reader == nullptr) {
+        throw IllegalStateException(
+            "No reader matching the regex '" + readerNameRegex + "' was found");
+    }
+
     auto pcscReader(std::dynamic_pointer_cast<PcscReader>(
         _plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
 
