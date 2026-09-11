@@ -24,9 +24,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/Thread.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
 #include "keypop/reader/CardReader.hpp"
@@ -45,9 +45,9 @@ using keyple::core::service::SmartCardServiceProvider;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::Thread;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
 using keypop::reader::CardReader;
@@ -115,7 +115,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ConfigurationUtil::ISO_CARD_PROTOCOL);
 }
 

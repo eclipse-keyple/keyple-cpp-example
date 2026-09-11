@@ -23,6 +23,7 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
 #include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
@@ -38,6 +39,7 @@ using keyple::core::service::SmartCardServiceProvider;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
 using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
@@ -145,7 +147,7 @@ getReader(
         .setSharingMode(sharingMode);
 
     std::dynamic_pointer_cast<ConfigurableCardReader>(reader)->activateProtocol(
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ISO_CARD_PROTOCOL);
 
     std::dynamic_pointer_cast<ConfigurableCardReader>(reader)->activateProtocol(

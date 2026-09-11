@@ -22,9 +22,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
@@ -39,9 +39,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -169,7 +169,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::EXCLUSIVE,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ISO_CARD_PROTOCOL);
 }
 
