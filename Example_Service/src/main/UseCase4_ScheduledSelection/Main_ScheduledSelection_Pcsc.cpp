@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
 
 #include "CardReaderObserver.hpp"
@@ -73,8 +74,8 @@ class Main_ScheduledSelection_Pcsc { };
 const std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ScheduledSelection_Pcsc));
 
-int
-main() {
+static int
+runExample() {
     logger->setLoggerLevel(Logger::Level::logTrace);
 
     /* Get the instance of the SmartCardService (singleton pattern) */
@@ -166,4 +167,15 @@ main() {
         "processed as soon as a card is detected\n");
 
     while (true);
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

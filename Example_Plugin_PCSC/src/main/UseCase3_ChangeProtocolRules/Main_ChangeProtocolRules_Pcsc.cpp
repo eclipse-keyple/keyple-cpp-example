@@ -11,6 +11,8 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
+
 #include "keyple/card/generic/GenericExtensionService.hpp"
 #include "keyple/core/common/KeypleCardExtension.hpp"
 #include "keyple/core/service/Plugin.hpp"
@@ -73,8 +75,8 @@ static const std::string READER_PROTOCOL_MIFARE_CLASSIC_4_K
     = "MIFARE_CLASSIC_4K";
 static const std::string CARD_PROTOCOL_MIFARE_CLASSIC_4_K = "MIFARE_CLASSIC_4K";
 
-int
-main() {
+static int
+runExample() {
     /* Get the instance of the SmartCardService (singleton pattern) */
     auto smartCardService(SmartCardServiceProvider::getService());
 
@@ -155,4 +157,15 @@ main() {
     logger->info("= SmartCard = %\n", smartCard);
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

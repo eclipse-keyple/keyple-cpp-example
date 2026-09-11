@@ -13,6 +13,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -278,8 +279,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "%=============== Performance measurement: validation transaction "
         "===============\n",
@@ -415,7 +416,7 @@ main() {
                     ANSI_RESET);
             } catch (const std::exception& e) {
                 logger->info(
-                    "%Transaction failed with exception: %s %\n",
+                    "%Transaction failed with exception: % %\n",
                     ANSI_RED,
                     e.what(),
                     ANSI_RESET);
@@ -428,4 +429,15 @@ main() {
     logger->info("Exiting the program on user's request.\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

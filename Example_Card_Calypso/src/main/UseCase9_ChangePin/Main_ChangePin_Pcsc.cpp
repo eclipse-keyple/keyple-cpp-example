@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -98,9 +99,9 @@ static std::unique_ptr<Logger> logger
 static const std::string AID = "315449432E49434131";
 
 static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KIF = 0x21;
-static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KVC = 0x79;
+static const std::uint8_t PIN_MODIFICATION_CIPHERING_KEY_KVC = 0x74;
 static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KIF = 0x30;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x79;
+static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x74;
 
 /* The plugin used to manage the readers. */
 static std::shared_ptr<Plugin> plugin;
@@ -252,8 +253,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-int
-main() {
+static int
+runExample() {
     logger->info(
         "= UseCase Calypso #9: Calypso card Change PIN ==================\n");
 
@@ -329,4 +330,15 @@ main() {
     logger->info("= #### End of the Calypso card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

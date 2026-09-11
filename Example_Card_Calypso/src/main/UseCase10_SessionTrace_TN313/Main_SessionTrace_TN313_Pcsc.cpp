@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -303,8 +304,8 @@ initSecuritySetting() {
     symmetricCryptoSecuritySetting->initCryptoContextForNextTransaction();
 }
 
-int
-main(int argc, char** argv) {
+static int
+runExample(int argc, char** argv) {
     parseCommandLine(argc, argv);
 
     logger->info(
@@ -380,4 +381,15 @@ main(int argc, char** argv) {
     logger->info("Exit program\n");
 
     return 0;
+}
+
+int
+main(int argc, char** argv) {
+    try {
+        return runExample(argc, argv);
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

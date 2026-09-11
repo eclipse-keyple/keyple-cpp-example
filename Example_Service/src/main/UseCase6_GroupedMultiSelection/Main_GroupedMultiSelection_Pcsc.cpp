@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
 
 #include "common/ConfigurationUtil.hpp"
@@ -88,8 +89,8 @@ class Main_GroupedMultiSelection_Pcsc { };
 const std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_GroupedMultiSelection_Pcsc));
 
-int
-main() {
+static int
+runExample() {
     /* Get the instance of the SmartCardService (singleton pattern) */
     std::shared_ptr<SmartCardService> smartCardService(
         SmartCardServiceProvider::getService());
@@ -212,4 +213,15 @@ main() {
     logger->info("= #### End of the generic card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }
