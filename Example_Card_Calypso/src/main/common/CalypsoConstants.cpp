@@ -35,7 +35,7 @@ const std::string CalypsoConstants::SAM_PROFILE_NAME = "SAM C1";
 const uint8_t CalypsoConstants::PIN_MODIFICATION_CIPHERING_KEY_KIF = 0x21;
 const uint8_t CalypsoConstants::PIN_MODIFICATION_CIPHERING_KEY_KVC = 0x79;
 const uint8_t CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KIF = 0x30;
-const uint8_t CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x79;
+const uint8_t CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x74;
 const std::vector<uint8_t> CalypsoConstants::PIN_OK = {0x30, 0x30, 0x30, 0x30};
 const std::vector<uint8_t> CalypsoConstants::PIN_KO = {0x30, 0x30, 0x30, 0x31};
 

@@ -50,6 +50,7 @@
 #include "keypop/reader/selection/IsoCardSelector.hpp"
 #include "keypop/reader/selection/spi/SmartCard.hpp"
 
+#include "../common/CalypsoConstants.h"
 #include "../common/ConfigurationUtil.hpp"
 
 using keyple::card::calypso::CalypsoExtensionService;
@@ -97,10 +98,6 @@ static std::unique_ptr<Logger> logger
 /** AID: Keyple test kit profile 1, Application 2 */
 static const std::string AID = "A000000291FF9101";
 
-static const std::vector<std::uint8_t> PIN_OK = {0x30, 0x30, 0x30, 0x30};
-static const std::vector<std::uint8_t> PIN_KO = {0x30, 0x30, 0x30, 0x31};
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KIF = 0x30;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x74;
 
 /* The plugin used to manage the readers. */
 static std::shared_ptr<Plugin> plugin;
@@ -285,14 +282,15 @@ runExample() {
             cardReader, calypsoCard));
 
     /* Verify the PIN in plain mode without initiating a secure session */
-    freeTransactionManager->prepareVerifyPin(PIN_OK).processCommands(
-        ChannelControl::KEEP_OPEN);
+    freeTransactionManager->prepareVerifyPin(CalypsoConstants::PIN_OK)
+        .processCommands(ChannelControl::KEEP_OPEN);
     logger->info(
         "Remaining attempts #1: %\n", calypsoCard->getPinAttemptRemaining());
 
     /* Add the key identifiers needed for ciphering the PIN */
     symmetricCryptoSecuritySetting->setPinVerificationCipheringKey(
-        PIN_VERIFICATION_CIPHERING_KEY_KIF, PIN_VERIFICATION_CIPHERING_KEY_KVC);
+        CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KIF,
+        CalypsoConstants::PIN_VERIFICATION_CIPHERING_KEY_KVC);
 
     /*
      * Instantiate a Secure Regular Mode Transaction Manager to handle
@@ -316,7 +314,8 @@ runExample() {
             secureRegularModeTransactionManagerBase.get());
 
     /* Verify the PIN in encrypted mode, outside a secure session */
-    secureRegularModeTransactionManager->prepareVerifyPin(PIN_OK)
+    secureRegularModeTransactionManager
+        ->prepareVerifyPin(CalypsoConstants::PIN_OK)
         .processCommands(ChannelControl::KEEP_OPEN);
 
     /* Log the current counter value (should be 3) */
@@ -330,7 +329,8 @@ runExample() {
     secureRegularModeTransactionManager->prepareOpenSecureSession(
         WriteAccessLevel::DEBIT);
     try {
-        secureRegularModeTransactionManager->prepareVerifyPin(PIN_KO)
+        secureRegularModeTransactionManager
+            ->prepareVerifyPin(CalypsoConstants::PIN_KO)
             .processCommands(ChannelControl::KEEP_OPEN);
     } catch (const InvalidPinException& ex) {
         logger->error("PIN Exception: %\n", ex.what());
@@ -353,7 +353,8 @@ runExample() {
     logger->info(
         "Remaining attempts #4: %\n", calypsoCard->getPinAttemptRemaining());
 
-    secureRegularModeTransactionManager->prepareVerifyPin(PIN_OK)
+    secureRegularModeTransactionManager
+        ->prepareVerifyPin(CalypsoConstants::PIN_OK)
         .prepareCloseSecureSession()
         .processCommands(ChannelControl::CLOSE_AFTER);
 
