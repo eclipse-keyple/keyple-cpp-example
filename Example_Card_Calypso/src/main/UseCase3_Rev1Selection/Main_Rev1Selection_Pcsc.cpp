@@ -27,7 +27,7 @@
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
@@ -52,7 +52,7 @@ using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::card::CalypsoCard;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
@@ -116,7 +116,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::INNOVATRON_B_PRIME_CARD.getName(),
+        PcscCardCommunicationProtocol::INNOVATRON_B_PRIME.getName(),
         ConfigurationUtil::INNOVATRON_CARD_PROTOCOL);
 }
 
