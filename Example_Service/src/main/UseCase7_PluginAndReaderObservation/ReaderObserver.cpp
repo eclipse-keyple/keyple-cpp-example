@@ -30,7 +30,13 @@ ReaderObserver::onReaderEvent(const std::shared_ptr<CardReaderEvent> event) {
         event->getReaderName(),
         event->getType());
 
-    if (event->getType() != CardReaderEvent::Type::CARD_REMOVED) {
+    /*
+     * UNAVAILABLE means the reader itself is gone: there is nothing left to
+     * finalize, and finalizing would restart a monitoring job on a reader that
+     * is being unregistered and is about to be destroyed.
+     */
+    if (event->getType() != CardReaderEvent::Type::CARD_REMOVED
+        && event->getType() != CardReaderEvent::Type::UNAVAILABLE) {
         std::dynamic_pointer_cast<ObservableCardReader>(
             smartCardService->getPlugin(pluginName)
                 ->getReader(event->getReaderName()))

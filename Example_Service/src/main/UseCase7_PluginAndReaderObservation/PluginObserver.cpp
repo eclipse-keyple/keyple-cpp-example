@@ -20,14 +20,14 @@
 #include "common/ConfigurationUtil.hpp"
 
 #include "keyple/core/common/KeypleReaderExtension.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ObservableCardReader.hpp"
 
 using keyple::core::common::KeypleReaderExtension;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ObservableCardReader;
 
@@ -135,7 +135,7 @@ PluginObserver::setupReader(std::shared_ptr<CardReader> cardReader) {
     auto configurable
         = std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader);
     configurable->activateProtocol(
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ConfigurationUtil::ISO_CARD_PROTOCOL);
 }
 

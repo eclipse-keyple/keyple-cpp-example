@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -28,10 +29,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactProtocol.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/WriteAccessLevel.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
@@ -58,10 +58,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
-using keyple::plugin::pcsc::PcscSupportedContactProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::WriteAccessLevel;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
@@ -96,7 +95,7 @@ static std::string cardReaderRegex = CARD_READER_NAME_REGEX;
 static std::string samReaderRegex = SAM_READER_NAME_REGEX;
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 static std::string cardAid = AID;
 
@@ -128,7 +127,7 @@ displayUsageAndExit() {
               << AID << "\" -c=\"" << CARD_READER_NAME_REGEX << "\" -s=\""
               << SAM_READER_NAME_REGEX << "\")" << std::endl;
     std::cout << " -a, --aid=\"APPLICATION_AID\"    between 5 and 16 hex "
-                 "bytes (e.g. \"315449432E49434131\")"
+                 "bytes (e.g. \"A000000291FF9101\")"
               << std::endl;
     std::cout << " -c, --card=\"CARD_READER_REGEX\" regular expression "
                  "matching the card reader name (e.g. \"ASK Logo.*\")"
@@ -218,7 +217,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ISO_CARD_PROTOCOL);
 }
 
@@ -233,7 +232,7 @@ initSamReader() {
         false,
         PcscReader::IsoProtocol::ANY,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+        PcscCardCommunicationProtocol::ISO_7816_3.getName(),
         SAM_PROTOCOL);
 }
 
@@ -303,8 +302,8 @@ initSecuritySetting() {
     symmetricCryptoSecuritySetting->initCryptoContextForNextTransaction();
 }
 
-int
-main(int argc, char** argv) {
+static int
+runExample(int argc, char** argv) {
     parseCommandLine(argc, argv);
 
     logger->info(
@@ -380,4 +379,15 @@ main(int argc, char** argv) {
     logger->info("Exit program\n");
 
     return 0;
+}
+
+int
+main(int argc, char** argv) {
+    try {
+        return runExample(argc, argv);
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

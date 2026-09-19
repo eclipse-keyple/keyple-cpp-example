@@ -11,9 +11,12 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "keyple/card/generic/ChannelControl.hpp"
 #include "keyple/card/generic/GenericExtensionService.hpp"
 #include "keyple/core/service/Plugin.hpp"
 #include "keyple/core/service/SmartCardServiceProvider.hpp"
@@ -21,16 +24,18 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
+#include "keypop/genericcard/GenericCardApiFactory.hpp"
+#include "keypop/genericcard/GenericCardSelectionExtension.hpp"
 #include "keypop/reader/CardReader.hpp"
+#include "keypop/reader/ChannelControl.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
 #include "keypop/reader/selection/CardSelectionResult.hpp"
 #include "keypop/reader/selection/spi/SmartCard.hpp"
 
-using keyple::card::generic::ChannelControl;
 using keyple::card::generic::GenericExtensionService;
 using keyple::core::service::Plugin;
 using keyple::core::service::SmartCardServiceProvider;
@@ -38,10 +43,13 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
+using keypop::genericcard::GenericCardApiFactory;
+using keypop::genericcard::GenericCardSelectionExtension;
 using keypop::reader::CardReader;
+using keypop::reader::ChannelControl;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
 using keypop::reader::selection::CardSelectionResult;
@@ -141,8 +149,9 @@ getReader(
     const std::string& logicalProtocolName) {
     const auto reader(_plugin->findReader(readerNameRegex));
 
-    auto pcscReader(std::dynamic_pointer_cast<PcscReader>(
-        _plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
+    auto pcscReader(
+        std::dynamic_pointer_cast<PcscReader>(_plugin->getReaderExtension(
+            typeid(PcscReader), reader->getName())));
 
     pcscReader->setContactless(isContactless)
         .setIsoProtocol(isoProtocol)
@@ -168,7 +177,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::EXCLUSIVE,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ISO_CARD_PROTOCOL);
 }
 
@@ -185,12 +194,14 @@ static std::shared_ptr<SmartCard>
 selectCard(std::shared_ptr<CardReader> reader) {
     auto cardSelectionManager(readerApiFactory->createCardSelectionManager());
     auto cardSelector(readerApiFactory->createIsoCardSelector());
-    auto genericCardSelectionExtension(
-        GenericExtensionService::getInstance()
-            ->createGenericCardSelectionExtension());
+    std::unique_ptr<GenericCardSelectionExtension>
+        genericCardSelectionExtension(
+            GenericExtensionService::getInstance()
+                ->getGenericCardApiFactory()
+                ->createGenericCardSelectionExtension());
 
     cardSelectionManager->prepareSelection(
-        cardSelector, genericCardSelectionExtension);
+        cardSelector, std::move(genericCardSelectionExtension));
 
     std::shared_ptr<CardSelectionResult> selectionResult(
         cardSelectionManager->processCardSelectionScenario(reader));
@@ -202,8 +213,8 @@ selectCard(std::shared_ptr<CardReader> reader) {
     return selectionResult->getActiveSmartCard();
 }
 
-int
-main() {
+static int
+runExample() {
     Logger::setLoggerLevel(Logger::Level::logTrace);
     logger->info("= UseCase Generic #1: basic card selection ==============\n");
 
@@ -227,13 +238,26 @@ main() {
 
     const std::vector<std::string> apduResponses
         = GenericExtensionService::getInstance()
+              ->getGenericCardApiFactory()
               ->createCardTransaction(cardReader, smartCard)
               ->prepareApdu(cplcApdu)
-              .processApdusToHexStrings(ChannelControl::CLOSE_AFTER);
+              .processCommands(ChannelControl::CLOSE_AFTER)
+              .getResponsesAsHexStrings();
 
     logger->info("CPLC Data: '%'\n", apduResponses[0]);
 
     logger->info("= #### End of the generic card processing\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

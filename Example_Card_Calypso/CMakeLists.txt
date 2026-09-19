@@ -392,3 +392,48 @@ TARGET_LINK_LIBRARIES(
     Keyple::Card::Calypso
     Keyple::Card::Calypso::Crypto::LegacySam
 )
+
+SET(USECASE14 UseCase14_ReadLegacySamCountersAndCeilings)
+SET(USECASE14_PCSC ${USECASE14}_Pcsc)
+ADD_EXECUTABLE(
+
+    ${USECASE14_PCSC}
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/CalypsoConstants.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/ConfigurationUtil.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE14}/Main_ReadLegacySamCountersAndCeilings_Pcsc.cpp
+)
+TARGET_LINK_LIBRARIES(
+
+    ${USECASE14_PCSC}
+
+    Keyple::Plugin::Pcsc
+    Keyple::Service
+    Keyple::Service::Resource
+    Keyple::Util
+    Keyple::Card::Calypso
+    Keyple::Card::Calypso::Crypto::LegacySam
+)
+
+SET(USECASE15 UseCase15_ExtendedModeSession)
+SET(USECASE15_PCSC ${USECASE15}_Pcsc)
+ADD_EXECUTABLE(
+
+    ${USECASE15_PCSC}
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/CalypsoConstants.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main/common/ConfigurationUtil.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main/${USECASE15}/Main_ExtendedModeSession_Pcsc.cpp
+)
+TARGET_LINK_LIBRARIES(
+
+    ${USECASE15_PCSC}
+
+    Keyple::Card::Generic
+    Keyple::Plugin::Pcsc
+    Keyple::Service
+    Keyple::Service::Resource
+    Keyple::Util
+    Keyple::Card::Calypso
+    Keyple::Card::Calypso::Crypto::LegacySam
+)

@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -47,6 +48,7 @@
 #include "keypop/calypso/crypto/legacysam/transaction/TraceableSignatureComputationData.hpp"
 #include "keypop/calypso/crypto/legacysam/transaction/TraceableSignatureVerificationData.hpp"
 #include "keypop/reader/CardReader.hpp"
+#include "keypop/reader/ChannelControl.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
 #include "keypop/reader/selection/CardSelectionManager.hpp"
 #include "keypop/reader/spi/CardReaderObservationExceptionHandlerSpi.hpp"
@@ -85,6 +87,7 @@ using keypop::calypso::crypto::legacysam::transaction::
 using keypop::calypso::crypto::legacysam::transaction::
     TraceableSignatureVerificationData;
 using keypop::reader::CardReader;
+using keypop::reader::ChannelControl;
 using keypop::reader::ReaderApiFactory;
 using keypop::reader::selection::CardSelectionManager;
 using keypop::reader::spi::CardReaderObservationExceptionHandlerSpi;
@@ -352,7 +355,7 @@ performBasicSignature(std::shared_ptr<CardResource> cardResource) {
         HexUtil::toByteArray(DATA_TO_SIGN), KIF_BASIC, KVC_BASIC);
     freeTransactionManager->prepareComputeSignature(
         basicSignatureComputationData);
-    freeTransactionManager->processCommands();
+    freeTransactionManager->processCommands(ChannelControl::KEEP_OPEN);
     const std::string signatureHex(
         HexUtil::toHex(basicSignatureComputationData->getSignature()));
     logger->info("signature='%'\n", signatureHex);
@@ -374,7 +377,7 @@ performBasicSignature(std::shared_ptr<CardResource> cardResource) {
         KVC_BASIC);
     freeTransactionManager->prepareVerifySignature(
         basicSignatureVerificationData);
-    freeTransactionManager->processCommands();
+    freeTransactionManager->processCommands(ChannelControl::KEEP_OPEN);
     const bool isSignatureValid
         = basicSignatureVerificationData->isSignatureValid();
     logger->info("Signature is valid: '%'\n", isSignatureValid);
@@ -408,7 +411,7 @@ performTraceableSignature(std::shared_ptr<CardResource> cardResource) {
         .withSamTraceabilityMode(0, SamTraceabilityMode::FULL_SERIAL_NUMBER);
     freeTransactionManager->prepareComputeSignature(
         traceableSignatureComputationData);
-    freeTransactionManager->processCommands();
+    freeTransactionManager->processCommands(ChannelControl::KEEP_OPEN);
     const std::string signatureHex(
         HexUtil::toHex(traceableSignatureComputationData->getSignature()));
     const std::string signedDataHex(
@@ -436,7 +439,7 @@ performTraceableSignature(std::shared_ptr<CardResource> cardResource) {
             0, SamTraceabilityMode::FULL_SERIAL_NUMBER, nullptr);
     freeTransactionManager->prepareVerifySignature(
         traceableSignatureVerificationData);
-    freeTransactionManager->processCommands();
+    freeTransactionManager->processCommands(ChannelControl::KEEP_OPEN);
     const bool isSignatureValid
         = traceableSignatureVerificationData->isSignatureValid();
     logger->info("Signature is valid: '%'\n", isSignatureValid);
@@ -457,8 +460,8 @@ getInput() {
     return static_cast<char>(getchar());
 }
 
-int
-main() {
+static int
+runExample() {
     /* Initialize the context */
     initKeypleService();
     initLegacySamExtensionService();
@@ -496,4 +499,15 @@ main() {
     logger->info("Exit program.\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

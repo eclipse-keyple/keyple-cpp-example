@@ -11,14 +11,10 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
-#include <chrono>
 #include <cstdint>
-#include <exception>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "keyple/card/calypso/CalypsoExtensionService.hpp"
 #include "keyple/card/calypso/crypto/legacysam/LegacySamExtensionService.hpp"
@@ -37,9 +33,7 @@
 #include "keypop/calypso/card/WriteAccessLevel.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
-#include "keypop/calypso/card/card/ElementaryFile.hpp"
-#include "keypop/calypso/card/card/FileData.hpp"
-#include "keypop/calypso/card/cpp/SecureRegularModeTransactionManagerBase.hpp"
+#include "keypop/calypso/card/cpp/SecureExtendedModeTransactionManagerBase.hpp"
 #include "keypop/calypso/card/transaction/SecureSymmetricCryptoTransactionManager.hpp"
 #include "keypop/calypso/card/transaction/SymmetricCryptoSecuritySetting.hpp"
 #include "keypop/calypso/crypto/legacysam/LegacySamApiFactory.hpp"
@@ -71,7 +65,7 @@ using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::WriteAccessLevel;
 using keypop::calypso::card::card::CalypsoCard;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
-using keypop::calypso::card::cpp::SecureRegularModeTransactionManagerBase;
+using keypop::calypso::card::cpp::SecureExtendedModeTransactionManagerBase;
 using keypop::calypso::card::transaction::
     SecureSymmetricCryptoTransactionManager;
 using keypop::calypso::card::transaction::SymmetricCryptoSecuritySetting;
@@ -86,42 +80,26 @@ using keypop::reader::selection::IsoCardSelector;
 using keypop::reader::selection::spi::SmartCard;
 
 /**
- * Use Case Calypso 13 - Performance measurement: distributed reloading
- * (PC/SC)
+ * Handles the process of a Calypso card in Extended Mode using the PC/SC
+ * plugin and the Calypso Card Extension Service.
  *
- * <p>This code is dedicated to performance measurement for a reloading type
- * transaction.
+ * <p>This class demonstrates how to operate early authentication and data
+ * encryption within a Calypso Secure Session. Please check the generated log
+ * to observe the security mechanisms.
  */
-class Main_PerformanceMeasurement_DistributedReloading_Pcsc { };
-static std::unique_ptr<Logger> logger = LoggerFactory::getLogger(
-    typeid(Main_PerformanceMeasurement_DistributedReloading_Pcsc));
-
-static const std::string ANSI_RESET = "\033[0m";
-static const std::string ANSI_RED = "\033[31m";
-static const std::string ANSI_GREEN = "\033[32m";
-static const std::string ANSI_YELLOW = "\033[33m";
-
-/* Operating parameters. Edit as needed to match your setup. */
-static const std::string cardReaderRegex
-    = ConfigurationUtil::CARD_READER_NAME_REGEX;
-static const std::string samReaderRegex
-    = ConfigurationUtil::SAM_READER_NAME_REGEX;
+class Main_ExtendedModeSession_Pcsc { };
+static std::unique_ptr<Logger> logger
+    = LoggerFactory::getLogger(typeid(Main_ExtendedModeSession_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string cardAid = "A000000291FF9101";
+static const std::string AID = "315449432E49434131";
 
-static const int counterIncrement = 1;
-static const std::vector<std::uint8_t> newContractListRecord(
-    HexUtil::toByteArray(
-        "1E00000000000000000000000000000000000000000000000000000000"));
-static const std::vector<std::uint8_t> newContractRecord(
-    HexUtil::toByteArray(
-        "0900000000000000000000000000000000000000000000000000000000"));
-
-static const std::uint8_t SFI_ENVIRONMENT_AND_HOLDER = 0x07;
+/* File identifiers */
+static const std::uint8_t SFI_EVENT_LOG = 0x08;
 static const std::uint8_t SFI_CONTRACT_LIST = 0x1E;
 static const std::uint8_t SFI_CONTRACTS = 0x09;
-static const std::uint8_t SFI_COUNTERS = 0x19;
+static const std::string EVENT_LOG_DATA_FILL
+    = "00112233445566778899AABBCCDDEEFF00112233445566778899AABBCC";
 static const int RECORD_SIZE = 29;
 
 /* The plugin used to manage the readers. */
@@ -160,7 +138,7 @@ static void
 initCardReader() {
     cardReader = ConfigurationUtil::getReader(
         plugin,
-        cardReaderRegex,
+        ConfigurationUtil::CARD_READER_NAME_REGEX,
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
@@ -175,7 +153,7 @@ static void
 initSamReader() {
     samReader = ConfigurationUtil::getReader(
         plugin,
-        samReaderRegex,
+        ConfigurationUtil::SAM_READER_NAME_REGEX,
         false,
         PcscReader::IsoProtocol::ANY,
         PcscReader::SharingMode::SHARED,
@@ -239,13 +217,11 @@ initSecuritySetting() {
                 ->getLegacySamApiFactory()
                 ->createSymmetricCryptoCardTransactionManagerFactory(
                     samReader, sam));
-    symmetricCryptoSecuritySetting->enableRatificationMechanism();
 }
 
 /**
  * Selects the Calypso card for the transaction based on the specified
- * Application Identifier (AID), add additional read commands to retrieve the
- * "Environment and Holder" and "Contract List" files.
+ * Application Identifier (AID).
  */
 static std::shared_ptr<CalypsoCard>
 selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
@@ -258,9 +234,7 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     std::unique_ptr<CalypsoCardSelectionExtension>
         calypsoCardSelectionExtension(
             calypsoCardApiFactory->createCalypsoCardSelectionExtension());
-    calypsoCardSelectionExtension->acceptInvalidatedCard()
-        .prepareReadRecord(SFI_ENVIRONMENT_AND_HOLDER, 1)
-        .prepareReadRecord(SFI_CONTRACT_LIST, 1);
+    calypsoCardSelectionExtension->acceptInvalidatedCard();
     cardSelectionManager->prepareSelection(
         cardSelector, std::move(calypsoCardSelectionExtension));
 
@@ -268,7 +242,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
         cardSelectionManager->processCardSelectionScenario(reader));
 
     if (selectionResult->getActiveSmartCard() == nullptr) {
-        return nullptr;
+        throw IllegalStateException(
+            "The selection of the application '" + aid + "' failed.");
     }
 
     const std::shared_ptr<SmartCard> card(
@@ -277,18 +252,10 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-static int
-runExample() {
+int
+main() {
     logger->info(
-        "%=============== Performance measurement: validation transaction "
-        "===============\n",
-        ANSI_GREEN);
-    logger->info("Using parameters:\n");
-    logger->info("  CARD_READER_REGEX=%\n", cardReaderRegex);
-    logger->info("  SAM_READER_REGEX=%\n", samReaderRegex);
-    logger->info("  AID=%\n", cardAid);
-    logger->info("  Counter increment=%\n", counterIncrement);
-    logger->info("%\n", ANSI_RESET);
+        "= UseCase Calypso #15: Extended Mode Session ==================\n");
 
     /* Initialize the context */
     initKeypleService();
@@ -297,145 +264,58 @@ runExample() {
     initSamReader();
     initSecuritySetting();
 
-    while (true) {
-        std::cout << std::endl
-                  << ANSI_YELLOW
-                  << "########################################################"
-                  << ANSI_RESET << std::endl;
-        std::cout << ANSI_YELLOW
-                  << "## Press ENTER when the card is in the reader's field ##"
-                  << ANSI_RESET << std::endl;
-        std::cout << ANSI_YELLOW
-                  << "## (or press 'q' + ENTER to exit)                     ##"
-                  << ANSI_RESET << std::endl;
-        std::cout << ANSI_YELLOW
-                  << "########################################################"
-                  << ANSI_RESET << std::endl;
-
-        std::string input;
-        std::getline(std::cin, input);
-
-        if (input.find('q') != std::string::npos
-            || input.find('Q') != std::string::npos) {
-            break;
-        }
-
-        if (cardReader->isCardPresent()) {
-            try {
-                logger->info("Starting reloading transaction...\n");
-                logger->info("Select application with AID = '%'\n", cardAid);
-
-                /* Read the current time used later to compute the transaction
-                 * time */
-                const auto timeStamp = std::chrono::steady_clock::now();
-
-                std::shared_ptr<CalypsoCard> calypsoCard(
-                    selectCard(cardReader, cardAid));
-                if (calypsoCard == nullptr) {
-                    throw IllegalStateException("Card selection failed!");
-                }
-
-                /* TODO Place here the pre-analysis of the context and the
-                 * contract list */
-
-                const int nbContractRecordsToRead
-                    = calypsoCard->getProductType()
-                              == CalypsoCard::ProductType::BASIC
-                          ? 1
-                          : 2;
-                const int nbCountersToRead
-                    = calypsoCard->getProductType()
-                              == CalypsoCard::ProductType::BASIC
-                          ? 1
-                          : 2;
-
-                /*
-                 * Create a transaction manager, open a Secure Session, read
-                 * Environment and Event Log.
-                 * Specifying expected response lengths in read commands
-                 * serves as a protective measure for legacy cards.
-                 *
-                 * The keypop API declares
-                 * createSecureRegularModeTransactionManager() as returning a
-                 * SecureRegularModeTransactionManagerBase, which does not
-                 * itself expose prepareOpenSecureSession() (it's only
-                 * declared on SecureSymmetricCryptoTransactionManager<T>, a
-                 * sibling interface implemented by the same concrete
-                 * object). A downcast is required to reach it.
-                 */
-                std::unique_ptr<SecureRegularModeTransactionManagerBase>
-                    cardTransactionManagerBase(
-                        calypsoCardApiFactory
-                            ->createSecureRegularModeTransactionManager(
-                                cardReader,
-                                calypsoCard,
-                                symmetricCryptoSecuritySetting));
-
-                auto cardTransactionManager
-                    = dynamic_cast<SecureSymmetricCryptoTransactionManager<
-                        SecureRegularModeTransactionManagerBase>*>(
-                        cardTransactionManagerBase.get());
-
-                cardTransactionManager
-                    ->prepareOpenSecureSession(WriteAccessLevel::LOAD)
-                    .prepareReadRecords(
-                        SFI_ENVIRONMENT_AND_HOLDER, 1, 1, RECORD_SIZE)
-                    .prepareReadRecords(SFI_CONTRACT_LIST, 1, 1, RECORD_SIZE)
-                    .prepareReadRecords(
-                        SFI_CONTRACTS, 1, nbContractRecordsToRead, RECORD_SIZE)
-                    .prepareReadCounter(SFI_COUNTERS, nbCountersToRead)
-                    .processCommands(ChannelControl::KEEP_OPEN);
-
-                /*
-                 * TODO Place here the analysis of the context, the contract
-                 * list, the contracts, the counters and the preparation of
-                 * the card's content update
-                 */
-
-                /* Update contract list and contract, increase counter and close
-                 * the Secure Session */
-                cardTransactionManagerBase
-                    ->prepareUpdateRecord(
-                        SFI_CONTRACT_LIST, 1, newContractListRecord)
-                    .prepareUpdateRecord(SFI_CONTRACTS, 1, newContractRecord)
-                    .prepareIncreaseCounter(SFI_COUNTERS, 1, counterIncrement)
-                    .prepareCloseSecureSession()
-                    .processCommands(ChannelControl::CLOSE_AFTER);
-
-                /* Display transaction time */
-                const auto elapsedMs
-                    = std::chrono::duration_cast<std::chrono::milliseconds>(
-                          std::chrono::steady_clock::now() - timeStamp)
-                          .count();
-                logger->info(
-                    "%Transaction succeeded. Execution time: % ms%\n",
-                    ANSI_GREEN,
-                    elapsedMs,
-                    ANSI_RESET);
-            } catch (const std::exception& e) {
-                logger->info(
-                    "%Transaction failed with exception: %%\n",
-                    ANSI_RED,
-                    e.what(),
-                    ANSI_RESET);
-            }
-        } else {
-            logger->info("%No card detected%\n", ANSI_RED, ANSI_RESET);
-        }
+    /* Check the card presence */
+    if (!cardReader->isCardPresent()) {
+        throw IllegalStateException("No card is present in the reader.");
     }
 
-    logger->info("Exiting the program on user's request.\n");
+    /* Select the card */
+    std::shared_ptr<CalypsoCard> calypsoCard = selectCard(cardReader, AID);
+
+    logger->info("= SmartCard = %\n", calypsoCard);
+
+    if (!calypsoCard->isExtendedModeSupported()) {
+        throw IllegalStateException(
+            "This Calypso card does not support the extended mode.");
+    }
+
+    /*
+     * The keypop API declares createSecureExtendedModeTransactionManager() as
+     * returning a SecureExtendedModeTransactionManagerBase, which does not
+     * itself expose prepareOpenSecureSession() (it's only declared on
+     * SecureSymmetricCryptoTransactionManager<T>, a sibling interface
+     * implemented by the same concrete object). A downcast is required to
+     * reach it.
+     */
+    std::unique_ptr<SecureExtendedModeTransactionManagerBase>
+        cardTransactionBase(
+            calypsoCardApiFactory->createSecureExtendedModeTransactionManager(
+                cardReader, calypsoCard, symmetricCryptoSecuritySetting));
+
+    auto cardTransaction = dynamic_cast<SecureSymmetricCryptoTransactionManager<
+        SecureExtendedModeTransactionManagerBase>*>(cardTransactionBase.get());
+
+    /*
+     * Operates the transaction.
+     * Specifying expected response lengths in read commands serves as a
+     * protective measure for legacy cards.
+     */
+    cardTransaction->prepareOpenSecureSession(WriteAccessLevel::DEBIT)
+        .prepareEarlyMutualAuthentication()
+        .prepareReadRecords(SFI_CONTRACT_LIST, 1, 1, RECORD_SIZE)
+        .prepareActivateEncryption()
+        .prepareReadRecords(SFI_CONTRACTS, 1, 1, RECORD_SIZE)
+        .prepareDeactivateEncryption()
+        .prepareAppendRecord(
+            SFI_EVENT_LOG, HexUtil::toByteArray(EVENT_LOG_DATA_FILL))
+        .prepareCloseSecureSession()
+        .processCommands(ChannelControl::CLOSE_AFTER);
+
+    logger->info(
+        "The secure session has ended successfully, all data has been "
+        "written to the card's memory.\n");
+
+    logger->info("= #### End of the Calypso card processing.\n");
 
     return 0;
-}
-
-int
-main() {
-    try {
-        return runExample();
-
-    } catch (const std::exception& e) {
-        logger->error("Example terminated on exception: %\n", e.what());
-        return 1;
-    }
 }

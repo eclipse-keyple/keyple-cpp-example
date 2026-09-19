@@ -76,8 +76,8 @@ CardReaderObserver::onReaderObservationError(
     const std::string& readerName,
     const std::shared_ptr<std::exception> e) {
     mLogger->error(
-        "An exception occurred in plugin '%', reader '%'\n",
+        "An exception occurred in plugin '%', reader '%': %\n",
         pluginName,
         readerName,
-        e);
+        e ? e->what() : "unknown");
 }
