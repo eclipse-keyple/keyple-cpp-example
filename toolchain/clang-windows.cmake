@@ -45,8 +45,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MDd")         # debug multi thread dll
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GS")          # buffers security check
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:precise")  # floating point
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:wchar_t")  # standard behaviour
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:forScope") # 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:inline")   # 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:forScope") #
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:inline")   #
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR")          # enables RTTI
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Gd")          # uses __cdecl convention
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /TP")          # all sources are C++
@@ -57,6 +57,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4290")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4309")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4834")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4373")
 
 # Linker
 #SET(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} --sysroot=${CLANG_SYSROOT_DIR}")
@@ -67,4 +68,3 @@ SET(LIBRARY_TYPE SHARED)
 
 # Special tricks
 INCLUDE(GenerateExportHeader)
-

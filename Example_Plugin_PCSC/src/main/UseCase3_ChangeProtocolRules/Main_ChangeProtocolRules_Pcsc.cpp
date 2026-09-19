@@ -11,6 +11,9 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <memory>
+#include <string>
+
 #include "keyple/card/generic/GenericExtensionService.hpp"
 #include "keyple/core/common/KeypleCardExtension.hpp"
 #include "keyple/core/service/Plugin.hpp"
@@ -83,11 +86,12 @@ main() {
      * expression matching the expected devices, get the corresponding generic
      * plugin in return.
      */
-    auto factory(PcscPluginFactoryBuilder::builder()
-                     ->updateProtocolIdentificationRule(
-                         READER_PROTOCOL_MIFARE_CLASSIC_4_K,
-                         "3B8F8001804F0CA0000003060300020000000069")
-                     .build());
+    auto factory(
+        PcscPluginFactoryBuilder::builder()
+            ->updateProtocolIdentificationRule(
+                READER_PROTOCOL_MIFARE_CLASSIC_4_K,
+                "3B8F8001804F0CA0000003060300020000000069")
+            .build());
     auto plugin(smartCardService->registerPlugin(factory));
 
     /*
@@ -137,7 +141,9 @@ main() {
      * selection scenario.
      */
     cardSelectionManager->prepareSelection(
-        cardSelector, cardExtension->createGenericCardSelectionExtension());
+        cardSelector,
+        cardExtension->getGenericCardApiFactory()
+            ->createGenericCardSelectionExtension());
 
     /* Actual card communication: run the selection scenario */
     const auto selectionResult

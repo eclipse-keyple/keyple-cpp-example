@@ -29,10 +29,9 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactProtocol.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
 #include "keypop/calypso/card/CalypsoCardApiFactory.hpp"
 #include "keypop/calypso/card/WriteAccessLevel.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
@@ -64,10 +63,9 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
-using keyple::plugin::pcsc::PcscSupportedContactProtocol;
 using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::WriteAccessLevel;
 using keypop::calypso::card::card::CalypsoCard;
@@ -162,7 +160,7 @@ initCardReader() {
         true,
         PcscReader::IsoProtocol::T1,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ConfigurationUtil::ISO_CARD_PROTOCOL);
 }
 
@@ -177,7 +175,7 @@ initSamReader() {
         false,
         PcscReader::IsoProtocol::ANY,
         PcscReader::SharingMode::SHARED,
-        PcscSupportedContactProtocol::ISO_7816_3_T0.getName(),
+        PcscCardCommunicationProtocol::ISO_7816_3.getName(),
         ConfigurationUtil::SAM_PROTOCOL);
 }
 
@@ -364,11 +362,29 @@ main() {
                     ->prepareOpenSecureSession(WriteAccessLevel::DEBIT)
                     .prepareReadRecords(
                         SFI_ENVIRONMENT_AND_HOLDER, 1, 1, RECORD_SIZE)
-                    .prepareReadRecords(SFI_EVENT_LOG, 1, 1, RECORD_SIZE)
                     .processCommands(ChannelControl::KEEP_OPEN);
 
-                /* TODO Place here the analysis of the context and the last
-                 * event log */
+                /* TODO Place here the analysis of the context */
+
+                /* Read the last event record */
+                cardTransactionManagerBase
+                    ->prepareReadRecords(SFI_EVENT_LOG, 1, 1, RECORD_SIZE)
+                    .processCommands(ChannelControl::KEEP_OPEN);
+
+                /*
+                 * TODO Place here the analysis of the last event log
+                 * Ratification and anti-passback management:
+                 *   This section handles the scenario where a previous
+                 * transaction occurred very recently:
+                 *   - If the previous transaction has not been ratified,
+                 * access is granted immediately. The only required action is
+                 * to close the session, which ensures the authenticity of the
+                 * support.
+                 *   - If the previous transaction has been ratified, access
+                 * is denied according to the anti-passback rule, preventing
+                 * multiple successive illegal uses of the same support in a
+                 * short time.
+                 */
 
                 /*
                  * Read the contract list.

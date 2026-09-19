@@ -17,7 +17,6 @@
 #include <memory>
 #include <string>
 
-#include "keyple/card/generic/GenericCardSelectionExtension.hpp"
 #include "keyple/card/generic/GenericExtensionService.hpp"
 #include "keyple/core/service/Plugin.hpp"
 #include "keyple/core/service/SmartCardService.hpp"
@@ -39,13 +38,13 @@
 #include "keyple/plugin/stub/StubPluginFactoryBuilder.hpp"
 #include "keyple/plugin/stub/StubReader.hpp"
 #include "keyple/plugin/stub/StubSmartCard.hpp"
+#include "keypop/genericcard/GenericCardSelectionExtension.hpp"
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
 #include "keypop/reader/selection/IsoCardSelector.hpp"
 #include "keypop/reader/spi/CardReaderObservationExceptionHandlerSpi.hpp"
 
-using keyple::card::generic::GenericCardSelectionExtension;
 using keyple::card::generic::GenericExtensionService;
 using keyple::core::service::Plugin;
 using keyple::core::service::SmartCardService;
@@ -67,6 +66,7 @@ using keyple::plugin::stub::StubPlugin;
 using keyple::plugin::stub::StubPluginFactoryBuilder;
 using keyple::plugin::stub::StubReader;
 using keyple::plugin::stub::StubSmartCard;
+using keypop::genericcard::GenericCardSelectionExtension;
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -264,6 +264,7 @@ main() {
 
     std::shared_ptr<GenericCardSelectionExtension> genericCardSelectionExtension
         = GenericExtensionService::getInstance()
+              ->getGenericCardApiFactory()
               ->createGenericCardSelectionExtension();
 
     std::shared_ptr<CardResourceProfileExtension> cardResourceExtensionA

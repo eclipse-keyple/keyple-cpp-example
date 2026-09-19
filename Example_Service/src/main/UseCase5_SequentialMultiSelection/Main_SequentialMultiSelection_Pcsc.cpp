@@ -12,10 +12,10 @@
  ******************************************************************************/
 
 #include <memory>
+#include <string>
 
 #include "common/ConfigurationUtil.hpp"
 
-#include "keyple/card/generic/GenericCardSelectionExtension.hpp"
 #include "keyple/card/generic/GenericExtensionService.hpp"
 #include "keyple/core/service/Plugin.hpp"
 #include "keyple/core/service/SmartCardService.hpp"
@@ -24,9 +24,10 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
+#include "keypop/genericcard/GenericCardSelectionExtension.hpp"
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
@@ -36,7 +37,6 @@
 #include "keypop/reader/selection/IsoCardSelector.hpp"
 #include "keypop/reader/selection/spi/IsoSmartCard.hpp"
 
-using keyple::card::generic::GenericCardSelectionExtension;
 using keyple::card::generic::GenericExtensionService;
 using keyple::core::service::Plugin;
 using keyple::core::service::SmartCardService;
@@ -45,9 +45,10 @@ using keyple::core::util::HexUtil;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
+using keypop::genericcard::GenericCardSelectionExtension;
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -169,13 +170,14 @@ main() {
         .setSharingMode(PcscReader::SharingMode::SHARED);
     std::dynamic_pointer_cast<ConfigurableCardReader>(cardReader)
         ->activateProtocol(
-            PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+            PcscCardCommunicationProtocol::ISO_14443_4.getName(),
             ConfigurationUtil::ISO_CARD_PROTOCOL);
 
-    logger->info("=============== "
-                 "UseCase Generic #5: sequential selections based on an AID "
-                 "prefix "
-                 "===============");
+    logger->info(
+        "=============== "
+        "UseCase Generic #5: sequential selections based on an AID "
+        "prefix "
+        "===============");
 
     /* Check if a card is present in the reader */
     if (!cardReader->isCardPresent()) {
@@ -202,6 +204,7 @@ main() {
 
     std::shared_ptr<GenericCardSelectionExtension> genericCardSelectionExtension
         = GenericExtensionService::getInstance()
+              ->getGenericCardApiFactory()
               ->createGenericCardSelectionExtension();
 
     /*

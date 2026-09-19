@@ -11,6 +11,9 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <memory>
+#include <string>
+
 #include "keyple/core/service/Plugin.hpp"
 #include "keyple/core/service/SmartCardService.hpp"
 #include "keyple/core/service/SmartCardServiceProvider.hpp"
@@ -63,17 +66,10 @@ class Main_ReaderTypeAutoIdentification_Pcsc { };
 static const std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ReaderTypeAutoIdentification_Pcsc));
 
-static const std::string contactlessFilter = ".*ASK LoGO.*|"
-                                             ".*HID OMNIKEY 5427 CK.*|"
-                                             ".*contactless.*|"
-                                             ".*00 01.*|"
-                                             ".*5x21-CL 0.*";
-
-static const std::string contactFilter = ".*Identive.*|"
-                                         ".*HID Global OMNIKEY 3x21.*|"
-                                         "(?=contact)(?!contactless)|"
-                                         ".*00 00.*|"
-                                         ".*5x21 0.*";
+static const std::string contactlessFilter
+    = "^(?!(.*Identive|.*HID Global OMNIKEY 3x21|.*contact\\b(?!less)|"
+      ".*00 00|.*5x21 0)).*(ASK LoGO|HID OMNIKEY 5427 CK|contactless|00 01|"
+      "5x21-CL 0).*";
 
 int
 main() {
@@ -89,7 +85,6 @@ main() {
     std::shared_ptr<Plugin> plugin = smartCardService->registerPlugin(
         PcscPluginFactoryBuilder::builder()
             ->useContactlessReaderIdentificationFilter(contactlessFilter)
-            .useContactReaderIdentificationFilter(contactFilter)
             .build());
 
     /* Log the type of each reader */

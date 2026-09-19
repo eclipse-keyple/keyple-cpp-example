@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "../common/ConfigurationUtil.hpp"
 
@@ -22,9 +23,10 @@
 #include "keyple/core/util/cpp/Logger.hpp"
 #include "keyple/core/util/cpp/LoggerFactory.hpp"
 #include "keyple/core/util/cpp/exception/IllegalStateException.hpp"
+#include "keyple/plugin/pcsc/PcscCardCommunicationProtocol.hpp"
 #include "keyple/plugin/pcsc/PcscPluginFactoryBuilder.hpp"
 #include "keyple/plugin/pcsc/PcscReader.hpp"
-#include "keyple/plugin/pcsc/PcscSupportedContactlessProtocol.hpp"
+#include "keypop/genericcard/GenericCardSelectionExtension.hpp"
 #include "keypop/reader/CardReader.hpp"
 #include "keypop/reader/ConfigurableCardReader.hpp"
 #include "keypop/reader/ReaderApiFactory.hpp"
@@ -37,9 +39,10 @@ using keyple::core::service::SmartCardServiceProvider;
 using keyple::core::util::cpp::Logger;
 using keyple::core::util::cpp::LoggerFactory;
 using keyple::core::util::cpp::exception::IllegalStateException;
+using keyple::plugin::pcsc::PcscCardCommunicationProtocol;
 using keyple::plugin::pcsc::PcscPluginFactoryBuilder;
 using keyple::plugin::pcsc::PcscReader;
-using keyple::plugin::pcsc::PcscSupportedContactlessProtocol;
+using keypop::genericcard::GenericCardSelectionExtension;
 using keypop::reader::CardReader;
 using keypop::reader::ConfigurableCardReader;
 using keypop::reader::ReaderApiFactory;
@@ -81,7 +84,7 @@ static std::shared_ptr<CardReader> cardReader;
 static const std::string CONTACTLESS_READER_NAME_REGEX
     = ".*ASK LoGO.*|.*Contactless.*|.*00 01.*";
 static const std::string ISO_CARD_PROTOCOL = "ISO_14443_4_CARD";
-static const std::string MIFARE_CLASSIC_PROTOCOL = "MIFARE_CLASSIC_CARD";
+static const std::string MIFARE_ULTRALIGHT_PROTOCOL = "MIFARE_CLASSIC_CARD";
 
 /**
  * Initializes the Keyple service.
@@ -136,20 +139,21 @@ getReader(
     const PcscReader::SharingMode sharingMode) {
     const auto reader(_plugin->findReader(readerNameRegex));
 
-    auto pcscReader(std::dynamic_pointer_cast<PcscReader>(
-        _plugin->getReaderExtension(typeid(PcscReader), reader->getName())));
+    auto pcscReader(
+        std::dynamic_pointer_cast<PcscReader>(_plugin->getReaderExtension(
+            typeid(PcscReader), reader->getName())));
 
     pcscReader->setContactless(isContactless)
         .setIsoProtocol(isoProtocol)
         .setSharingMode(sharingMode);
 
     std::dynamic_pointer_cast<ConfigurableCardReader>(reader)->activateProtocol(
-        PcscSupportedContactlessProtocol::ISO_14443_4.getName(),
+        PcscCardCommunicationProtocol::ISO_14443_4.getName(),
         ISO_CARD_PROTOCOL);
 
     std::dynamic_pointer_cast<ConfigurableCardReader>(reader)->activateProtocol(
-        PcscSupportedContactlessProtocol::MIFARE_CLASSIC.getName(),
-        MIFARE_CLASSIC_PROTOCOL);
+        PcscCardCommunicationProtocol::MIFARE_ULTRALIGHT.getName(),
+        MIFARE_ULTRALIGHT_PROTOCOL);
 
     return reader;
 }
@@ -183,13 +187,15 @@ static std::shared_ptr<SmartCard>
 selectCard(std::shared_ptr<CardReader> reader) {
     auto cardSelectionManager(readerApiFactory->createCardSelectionManager());
     auto cardSelector(readerApiFactory->createBasicCardSelector());
-    cardSelector->filterByCardProtocol(MIFARE_CLASSIC_PROTOCOL);
-    auto genericCardSelectionExtension(
-        GenericExtensionService::getInstance()
-            ->createGenericCardSelectionExtension());
+    cardSelector->filterByCardProtocol(MIFARE_ULTRALIGHT_PROTOCOL);
+    std::unique_ptr<GenericCardSelectionExtension>
+        genericCardSelectionExtension(
+            GenericExtensionService::getInstance()
+                ->getGenericCardApiFactory()
+                ->createGenericCardSelectionExtension());
 
     cardSelectionManager->prepareSelection(
-        cardSelector, genericCardSelectionExtension);
+        cardSelector, std::move(genericCardSelectionExtension));
 
     std::shared_ptr<CardSelectionResult> selectionResult(
         cardSelectionManager->processCardSelectionScenario(reader));
@@ -203,8 +209,9 @@ selectCard(std::shared_ptr<CardReader> reader) {
 
 int
 main() {
-    logger->info("= UseCase Generic #2: protocol based card selection "
-                 "==================\n");
+    logger->info(
+        "= UseCase Generic #2: protocol based card selection "
+        "==================\n");
 
     initKeypleService();
     initGenericCardExtensionService();
@@ -218,7 +225,7 @@ main() {
 
     logger->info(
         "= #### Select the card if the protocol is '%'.\n",
-        MIFARE_CLASSIC_PROTOCOL);
+        MIFARE_ULTRALIGHT_PROTOCOL);
 
     std::shared_ptr<SmartCard> smartCard(selectCard(cardReader));
     if (smartCard == nullptr) {

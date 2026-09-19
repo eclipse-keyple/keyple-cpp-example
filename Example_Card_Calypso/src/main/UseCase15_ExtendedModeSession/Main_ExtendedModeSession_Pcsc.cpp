@@ -15,7 +15,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "keyple/card/calypso/CalypsoExtensionService.hpp"
 #include "keyple/card/calypso/crypto/legacysam/LegacySamExtensionService.hpp"
@@ -34,9 +33,7 @@
 #include "keypop/calypso/card/WriteAccessLevel.hpp"
 #include "keypop/calypso/card/card/CalypsoCard.hpp"
 #include "keypop/calypso/card/card/CalypsoCardSelectionExtension.hpp"
-#include "keypop/calypso/card/cpp/SecureRegularModeTransactionManagerBase.hpp"
-#include "keypop/calypso/card/transaction/FreeTransactionManager.hpp"
-#include "keypop/calypso/card/transaction/InvalidPinException.hpp"
+#include "keypop/calypso/card/cpp/SecureExtendedModeTransactionManagerBase.hpp"
 #include "keypop/calypso/card/transaction/SecureSymmetricCryptoTransactionManager.hpp"
 #include "keypop/calypso/card/transaction/SymmetricCryptoSecuritySetting.hpp"
 #include "keypop/calypso/crypto/legacysam/LegacySamApiFactory.hpp"
@@ -68,9 +65,7 @@ using keypop::calypso::card::CalypsoCardApiFactory;
 using keypop::calypso::card::WriteAccessLevel;
 using keypop::calypso::card::card::CalypsoCard;
 using keypop::calypso::card::card::CalypsoCardSelectionExtension;
-using keypop::calypso::card::cpp::SecureRegularModeTransactionManagerBase;
-using keypop::calypso::card::transaction::FreeTransactionManager;
-using keypop::calypso::card::transaction::InvalidPinException;
+using keypop::calypso::card::cpp::SecureExtendedModeTransactionManagerBase;
 using keypop::calypso::card::transaction::
     SecureSymmetricCryptoTransactionManager;
 using keypop::calypso::card::transaction::SymmetricCryptoSecuritySetting;
@@ -85,21 +80,27 @@ using keypop::reader::selection::IsoCardSelector;
 using keypop::reader::selection::spi::SmartCard;
 
 /**
- * Manages the process of verifying the PIN code of a Calypso card using the
- * PC/SC plugin, demonstrating both plain and encrypted PIN verification
- * methods.
+ * Handles the process of a Calypso card in Extended Mode using the PC/SC
+ * plugin and the Calypso Card Extension Service.
+ *
+ * <p>This class demonstrates how to operate early authentication and data
+ * encryption within a Calypso Secure Session. Please check the generated log
+ * to observe the security mechanisms.
  */
-class Main_VerifyPin_Pcsc { };
+class Main_ExtendedModeSession_Pcsc { };
 static std::unique_ptr<Logger> logger
-    = LoggerFactory::getLogger(typeid(Main_VerifyPin_Pcsc));
+    = LoggerFactory::getLogger(typeid(Main_ExtendedModeSession_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
 static const std::string AID = "315449432E49434131";
 
-static const std::vector<std::uint8_t> PIN_OK = {0x30, 0x30, 0x30, 0x30};
-static const std::vector<std::uint8_t> PIN_KO = {0x30, 0x30, 0x30, 0x31};
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KIF = 0x30;
-static const std::uint8_t PIN_VERIFICATION_CIPHERING_KEY_KVC = 0x79;
+/* File identifiers */
+static const std::uint8_t SFI_EVENT_LOG = 0x08;
+static const std::uint8_t SFI_CONTRACT_LIST = 0x1E;
+static const std::uint8_t SFI_CONTRACTS = 0x09;
+static const std::string EVENT_LOG_DATA_FILL
+    = "00112233445566778899AABBCCDDEEFF00112233445566778899AABBCC";
+static const int RECORD_SIZE = 29;
 
 /* The plugin used to manage the readers. */
 static std::shared_ptr<Plugin> plugin;
@@ -254,7 +255,7 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
 int
 main() {
     logger->info(
-        "= UseCase Calypso #6: Calypso card Verify PIN ==================\n");
+        "= UseCase Calypso #15: Extended Mode Session ==================\n");
 
     /* Initialize the context */
     initKeypleService();
@@ -263,7 +264,7 @@ main() {
     initSamReader();
     initSecuritySetting();
 
-    /* Verify if a card is present in the reader */
+    /* Check the card presence */
     if (!cardReader->isCardPresent()) {
         throw IllegalStateException("No card is present in the reader.");
     }
@@ -273,98 +274,48 @@ main() {
 
     logger->info("= SmartCard = %\n", calypsoCard);
 
-    const std::string csn(
-        HexUtil::toHex(calypsoCard->getApplicationSerialNumber()));
-    logger->info("Calypso Serial Number = %\n", csn);
-
-    /* Instantiate a Free Transaction manager to operate PIN verification
-     * without encryption */
-    std::unique_ptr<FreeTransactionManager> freeTransactionManager(
-        calypsoCardApiFactory->createFreeTransactionManager(
-            cardReader, calypsoCard));
-
-    /* Verify the PIN in plain mode without initiating a secure session */
-    freeTransactionManager->prepareVerifyPin(PIN_OK).processCommands(
-        ChannelControl::KEEP_OPEN);
-    logger->info(
-        "Remaining attempts #1: %\n", calypsoCard->getPinAttemptRemaining());
-
-    /* Add the key identifiers needed for ciphering the PIN */
-    symmetricCryptoSecuritySetting->setPinVerificationCipheringKey(
-        PIN_VERIFICATION_CIPHERING_KEY_KIF, PIN_VERIFICATION_CIPHERING_KEY_KVC);
+    if (!calypsoCard->isExtendedModeSupported()) {
+        throw IllegalStateException(
+            "This Calypso card does not support the extended mode.");
+    }
 
     /*
-     * Instantiate a Secure Regular Mode Transaction Manager to handle
-     * encrypted PIN verification and secure operations.
-     *
-     * The keypop API declares createSecureRegularModeTransactionManager() as
-     * returning a SecureRegularModeTransactionManagerBase, which does not
+     * The keypop API declares createSecureExtendedModeTransactionManager() as
+     * returning a SecureExtendedModeTransactionManagerBase, which does not
      * itself expose prepareOpenSecureSession() (it's only declared on
      * SecureSymmetricCryptoTransactionManager<T>, a sibling interface
      * implemented by the same concrete object). A downcast is required to
      * reach it.
      */
-    std::unique_ptr<SecureRegularModeTransactionManagerBase>
-        secureRegularModeTransactionManagerBase(
-            calypsoCardApiFactory->createSecureRegularModeTransactionManager(
+    std::unique_ptr<SecureExtendedModeTransactionManagerBase>
+        cardTransactionBase(
+            calypsoCardApiFactory->createSecureExtendedModeTransactionManager(
                 cardReader, calypsoCard, symmetricCryptoSecuritySetting));
 
-    auto secureRegularModeTransactionManager
-        = dynamic_cast<SecureSymmetricCryptoTransactionManager<
-            SecureRegularModeTransactionManagerBase>*>(
-            secureRegularModeTransactionManagerBase.get());
-
-    /* Verify the PIN in encrypted mode, outside a secure session */
-    secureRegularModeTransactionManager->prepareVerifyPin(PIN_OK)
-        .processCommands(ChannelControl::KEEP_OPEN);
-
-    /* Log the current counter value (should be 3) */
-    logger->info(
-        "Remaining attempts #2: %\n", calypsoCard->getPinAttemptRemaining());
+    auto cardTransaction = dynamic_cast<SecureSymmetricCryptoTransactionManager<
+        SecureExtendedModeTransactionManagerBase>*>(cardTransactionBase.get());
 
     /*
-     * Attempt PIN verification with an incorrect PIN within a secure session,
-     * handle exceptions and cancel the session if necessary.
+     * Operates the transaction.
+     * Specifying expected response lengths in read commands serves as a
+     * protective measure for legacy cards.
      */
-    secureRegularModeTransactionManager->prepareOpenSecureSession(
-        WriteAccessLevel::DEBIT);
-    try {
-        secureRegularModeTransactionManager->prepareVerifyPin(PIN_KO)
-            .processCommands(ChannelControl::KEEP_OPEN);
-    } catch (const InvalidPinException& ex) {
-        logger->error("PIN Exception: %\n", ex.what());
-        secureRegularModeTransactionManager->prepareCancelSecureSession()
-            .processCommands(ChannelControl::KEEP_OPEN);
-    }
-
-    /* Log the current counter value (should be 2) */
-    logger->error(
-        "Remaining attempts #3: %\n", calypsoCard->getPinAttemptRemaining());
-
-    /* Initiate a secure session, verify the PIN correctly, and then close the
-     * session */
-    secureRegularModeTransactionManager
-        ->prepareOpenSecureSession(WriteAccessLevel::DEBIT)
-        .prepareCheckPinStatus()
-        .processCommands(ChannelControl::KEEP_OPEN);
-
-    /* Log the current counter value (should be 2) */
-    logger->info(
-        "Remaining attempts #4: %\n", calypsoCard->getPinAttemptRemaining());
-
-    secureRegularModeTransactionManager->prepareVerifyPin(PIN_OK)
+    cardTransaction->prepareOpenSecureSession(WriteAccessLevel::DEBIT)
+        .prepareEarlyMutualAuthentication()
+        .prepareReadRecords(SFI_CONTRACT_LIST, 1, 1, RECORD_SIZE)
+        .prepareActivateEncryption()
+        .prepareReadRecords(SFI_CONTRACTS, 1, 1, RECORD_SIZE)
+        .prepareDeactivateEncryption()
+        .prepareAppendRecord(
+            SFI_EVENT_LOG, HexUtil::toByteArray(EVENT_LOG_DATA_FILL))
         .prepareCloseSecureSession()
         .processCommands(ChannelControl::CLOSE_AFTER);
 
-    /* Log the current counter value (should be 3) */
     logger->info(
-        "Remaining attempts #5: %\n", calypsoCard->getPinAttemptRemaining());
+        "The secure session has ended successfully, all data has been "
+        "written to the card's memory.\n");
 
-    logger->info(
-        "The Secure Session ended successfully, the PIN has been "
-        "verified.\n");
-
-    logger->info("= #### End of the Calypso card processing\n");
+    logger->info("= #### End of the Calypso card processing.\n");
 
     return 0;
 }

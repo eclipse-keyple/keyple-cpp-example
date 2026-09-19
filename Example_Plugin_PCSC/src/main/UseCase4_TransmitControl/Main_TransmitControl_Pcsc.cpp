@@ -266,7 +266,9 @@ main() {
      * selection scenario.
      */
     cardSelectionManager->prepareSelection(
-        cardSelector, cardExtension->createGenericCardSelectionExtension());
+        cardSelector,
+        cardExtension->getGenericCardApiFactory()
+            ->createGenericCardSelectionExtension());
 
     /* Schedule the selection scenario, always notify card presence. */
     cardSelectionManager->scheduleCardSelectionScenario(
