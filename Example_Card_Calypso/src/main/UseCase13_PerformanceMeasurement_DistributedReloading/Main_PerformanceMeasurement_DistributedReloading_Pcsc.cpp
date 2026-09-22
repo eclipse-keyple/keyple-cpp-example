@@ -414,7 +414,7 @@ runExample() {
                     ANSI_RESET);
             } catch (const std::exception& e) {
                 logger->info(
-                    "%Transaction failed with exception: %%\n",
+                    "%Transaction failed with exception: % %\n",
                     ANSI_RED,
                     e.what(),
                     ANSI_RESET);
