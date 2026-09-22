@@ -206,7 +206,7 @@ selectCard(std::shared_ptr<CardReader> reader) {
         cardSelectionManager->processCardSelectionScenario(reader));
 
     if (selectionResult->getActiveSmartCard() == nullptr) {
-        throw new IllegalStateException("The selection of the card failed.");
+        throw IllegalStateException("The selection of the card failed.");
     }
 
     return selectionResult->getActiveSmartCard();
