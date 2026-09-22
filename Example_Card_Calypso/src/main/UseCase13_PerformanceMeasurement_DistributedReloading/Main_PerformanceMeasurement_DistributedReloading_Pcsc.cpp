@@ -279,6 +279,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "%=============== Performance measurement: validation transaction "
         "===============\n",

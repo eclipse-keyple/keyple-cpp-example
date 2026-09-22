@@ -255,6 +255,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "= UseCase Calypso #5: multiple sessions ==================\n");
 

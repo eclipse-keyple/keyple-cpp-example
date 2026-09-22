@@ -179,6 +179,8 @@ selectSam(std::shared_ptr<CardReader> reader) {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     /* Initialize the context */
     initKeypleService();
     initLegacySamExtensionService();

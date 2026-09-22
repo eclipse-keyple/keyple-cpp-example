@@ -251,6 +251,8 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "= UseCase Calypso #6: Calypso card Verify PIN ==================\n");
 

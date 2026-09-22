@@ -462,6 +462,8 @@ getInput() {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     /* Initialize the context */
     initKeypleService();
     initLegacySamExtensionService();
