@@ -136,6 +136,8 @@ initCalypsoCardExtensionService() {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "= UseCase Calypso #3: selection of a rev1 card "
         "==================\n");

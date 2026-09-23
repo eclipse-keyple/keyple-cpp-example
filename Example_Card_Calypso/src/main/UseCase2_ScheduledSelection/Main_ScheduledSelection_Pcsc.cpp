@@ -133,6 +133,8 @@ initCalypsoCardExtensionService() {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "= UseCase Generic #2: scheduled selection ==================\n");
 

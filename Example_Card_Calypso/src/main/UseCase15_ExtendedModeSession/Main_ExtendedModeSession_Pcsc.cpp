@@ -12,6 +12,7 @@
  ******************************************************************************/
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -92,7 +93,7 @@ static std::unique_ptr<Logger> logger
     = LoggerFactory::getLogger(typeid(Main_ExtendedModeSession_Pcsc));
 
 /** AID: Keyple test kit profile 1, Application 2 */
-static const std::string AID = "315449432E49434131";
+static const std::string AID = "A000000291FF9101";
 
 /* File identifiers */
 static const std::uint8_t SFI_EVENT_LOG = 0x08;
@@ -252,8 +253,10 @@ selectCard(std::shared_ptr<CardReader> reader, const std::string& aid) {
     return std::dynamic_pointer_cast<CalypsoCard>(card);
 }
 
-int
-main() {
+static int
+runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "= UseCase Calypso #15: Extended Mode Session ==================\n");
 
@@ -318,4 +321,15 @@ main() {
     logger->info("= #### End of the Calypso card processing.\n");
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

@@ -11,6 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause                                      *
  ******************************************************************************/
 
+#include <exception>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -176,8 +177,10 @@ selectSam(std::shared_ptr<CardReader> reader) {
         samSelectionResult->getActiveSmartCard());
 }
 
-int
-main() {
+static int
+runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     /* Initialize the context */
     initKeypleService();
     initLegacySamExtensionService();
@@ -202,4 +205,15 @@ main() {
         countersToString(sam->getCounterCeilings()));
 
     return 0;
+}
+
+int
+main() {
+    try {
+        return runExample();
+
+    } catch (const std::exception& e) {
+        logger->error("Example terminated on exception: %\n", e.what());
+        return 1;
+    }
 }

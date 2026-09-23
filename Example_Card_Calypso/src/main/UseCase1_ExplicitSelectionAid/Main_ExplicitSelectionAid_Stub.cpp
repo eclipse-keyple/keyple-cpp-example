@@ -159,6 +159,8 @@ initCalypsoCardExtensionService() {
 
 static int
 runExample() {
+    Logger::setLoggerLevel(Logger::Level::logInfo);
+
     logger->info(
         "= UseCase Calypso #1: AID based explicit selection "
         "==================\n");

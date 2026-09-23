@@ -119,6 +119,7 @@ static std::shared_ptr<SymmetricCryptoSecuritySetting>
 /**
  * Displays the expected options and exits.
  */
+[[noreturn]]
 static void
 displayUsageAndExit() {
     std::cout << "Available options:" << std::endl;
@@ -304,6 +305,8 @@ initSecuritySetting() {
 
 static int
 runExample(int argc, char** argv) {
+    Logger::setLoggerLevel(Logger::Level::logDebug);
+
     parseCommandLine(argc, argv);
 
     logger->info(
