@@ -1,53 +1,28 @@
-/**************************************************************************************************
- * Copyright (c) 2023 Calypso Networks Association https://calypsonet.org/                        *
- *                                                                                                *
- * See the NOTICE file(s) distributed with this work for additional information regarding         *
- * copyright ownership.                                                                           *
- *                                                                                                *
- * This program and the accompanying materials are made available under the terms of the Eclipse  *
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0                  *
- *                                                                                                *
- * SPDX-License-Identifier: EPL-2.0                                                               *
- **************************************************************************************************/
+/* ****************************************************************************
+ * Copyright (c) 2025 Calypso Networks Association https://calypsonet.org/    *
+ *                                                                            *
+ * See the NOTICE file(s) distributed with this work for additional           *
+ * information regarding copyright ownership.                                 *
+ *                                                                            *
+ * This program and the accompanying materials are made available under the   *
+ * terms of the Eclipse Distribution License 1.0 which is available at        *
+ * https://www.eclipse.org/org/documents/edl-v10.php                          *
+ *                                                                            *
+ * SPDX-License-Identifier: BSD-3-Clause                                      *
+ ******************************************************************************/
 
-#include "ConfigurationUtil.h"
+#include "common/ConfigurationUtil.hpp"
 
-#include <regex>
-#include <sstream>
+#include <string>
 
-/* Keyple Core Util */
-#include "IllegalStateException.h"
-
-using namespace keyple::core::service;
-using namespace keyple::core::util;
-using namespace keyple::core::util::cpp::exception;
-
-const std::string ConfigurationUtil::AID_EMV_PPSE = "325041592E5359532E4444463031";
+const std::string ConfigurationUtil::AID_EMV_PPSE
+    = "325041592E5359532E4444463031";
 const std::string ConfigurationUtil::AID_KEYPLE_PREFIX = "315449432E";
 const std::string ConfigurationUtil::ISO_CARD_PROTOCOL = "ISO_14443_4_CARD";
-const std::string ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX =
-    ".*ASK LoGO.*|.*Contactless.*|.*ACR122U.*|.*00 01.*|.*5x21-CL 0.*";
-const std::string ConfigurationUtil::CONTACT_READER_NAME_REGEX =
-    ".*Identive.*|.*HID.*|.*00 00.*|.*5x21 0.*";
+const std::string ConfigurationUtil::CONTACTLESS_READER_NAME_REGEX
+    = ".*ASK LoGO.*|.*Contactless.*|.*ACR122U.*|.*00 01.*|.*5x21-CL 0.*";
+const std::string ConfigurationUtil::CONTACT_READER_NAME_REGEX
+    = ".*Identive.*|.*HID.*|.*00 00.*|.*5x21 0.*";
 
-const std::unique_ptr<Logger> ConfigurationUtil::mLogger =
-    LoggerFactory::getLogger(typeid(ConfigurationUtil));
-
-const std::string ConfigurationUtil::getCardReaderName(std::shared_ptr<Plugin> plugin,
-                                                       const std::string& readerNameRegex)
-{
-    std::string name = "";
-    const std::regex nameRegex(readerNameRegex);
-
-    for (const auto& readerName : plugin->getReaderNames()) {
-        if (std::regex_match(readerName, nameRegex)) {
-            mLogger->info("Card reader, plugin; %, name: %\n", plugin->getName(), readerName);
-            name = readerName;
-            return name;
-        }
-    }
-
-    std::stringstream ss;
-    ss << "Reader '" << readerNameRegex << "' not found in plugin '" << plugin->getName() << "'";
-    throw IllegalStateException(ss.str());
-}
+const std::unique_ptr<Logger> ConfigurationUtil::mLogger
+    = LoggerFactory::getLogger(typeid(ConfigurationUtil));
